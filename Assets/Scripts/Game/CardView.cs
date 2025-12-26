@@ -34,7 +34,7 @@ namespace Guardian.Game
             this.entry = entry;
             this.boardManager = boardManager;
 
-            // Â íà÷àëå êàðòà çàêðûòà
+            // Ð’ Ð½Ð°Ñ‡Ð°Ð»Ðµ ÐºÐ°Ñ€Ñ‚Ð° Ð·Ð°ÐºÑ€Ñ‹Ñ‚Ð°
             SetClosedVisual();
 
             button.onClick.RemoveAllListeners();
@@ -75,33 +75,43 @@ namespace Guardian.Game
             nameText.text = "???";
             roleText.text = "";
             statementText.text = "";
-            // Ìîæíî ïîìåíÿòü öâåò êíîïêè, ÷òîáû âûãëÿäåëà êàê ðóáàøêà êàðòû
+            // ÐœÐ¾Ð¶Ð½Ð¾ Ð¿Ð¾Ð¼ÐµÐ½ÑÑ‚ÑŒ Ñ†Ð²ÐµÑ‚ ÐºÐ½Ð¾Ð¿ÐºÐ¸, Ñ‡Ñ‚Ð¾Ð±Ñ‹ Ð²Ñ‹Ð³Ð»ÑÐ´ÐµÐ»Ð° ÐºÐ°Ðº Ñ€ÑƒÐ±Ð°ÑˆÐºÐ° ÐºÐ°Ñ€Ñ‚Ñ‹
         }
 
         private void SetOpenAliveVisual()
         {
             nameText.text = entry.cardDefinition.displayName;
-            roleText.text = entry.cardDefinition.roleType.ToString();
+            roleText.text = GetMaskedRoleText();
             statementText.text = entry.statementText;
-            // Ìîæíî ïîìåíÿòü öâåò/èêîíêó äëÿ «æèâîé, îòêðûòîé» êàðòû
+            // ÐœÐ¾Ð¶Ð½Ð¾ Ð¿Ð¾Ð¼ÐµÐ½ÑÑ‚ÑŒ Ñ†Ð²ÐµÑ‚/Ð¸ÐºÐ¾Ð½ÐºÑƒ Ð´Ð»Ñ Â«Ð¶Ð¸Ð²Ð¾Ð¹, Ð¾Ñ‚ÐºÑ€Ñ‹Ñ‚Ð¾Ð¹Â» ÐºÐ°Ñ€Ñ‚Ñ‹
         }
 
         private void SetDeadVillagerVisual()
         {
             nameText.text = entry.cardDefinition.displayName;
-            roleText.text = "Íåâèííûé ïîãèá";
-            // Ìîæíî äîáàâèòü èêîíêó ÷åðåïà, äðóãîé öâåò ôîíà
+            roleText.text = "ÐÐµÐ²Ð¸Ð½Ð½Ñ‹Ð¹ Ð¿Ð¾Ð³Ð¸Ð±";
+            // ÐœÐ¾Ð¶Ð½Ð¾ Ð´Ð¾Ð±Ð°Ð²Ð¸Ñ‚ÑŒ Ð¸ÐºÐ¾Ð½ÐºÑƒ Ñ‡ÐµÑ€ÐµÐ¿Ð°, Ð´Ñ€ÑƒÐ³Ð¾Ð¹ Ñ†Ð²ÐµÑ‚ Ñ„Ð¾Ð½Ð°
         }
 
         private void SetDeadDemonVisual()
         {
-            nameText.text = "Äåìîí óíè÷òîæåí";
+            nameText.text = "Ð”ÐµÐ¼Ð¾Ð½ ÑƒÐ½Ð¸Ñ‡Ñ‚Ð¾Ð¶ÐµÐ½";
             roleText.text = entry.cardDefinition.displayName;
-            // Çäåñü ìîæíî ïîêàçûâàòü «èñòèííûé îáëèê», ïîçæå — ñïðàéò äåìîíà
+            // Ð—Ð´ÐµÑÑŒ Ð¼Ð¾Ð¶Ð½Ð¾ Ð¿Ð¾ÐºÐ°Ð·Ñ‹Ð²Ð°Ñ‚ÑŒ Â«Ð¸ÑÑ‚Ð¸Ð½Ð½Ñ‹Ð¹ Ð¾Ð±Ð»Ð¸ÐºÂ», Ð¿Ð¾Ð·Ð¶Ðµ â€” ÑÐ¿Ñ€Ð°Ð¹Ñ‚ Ð´ÐµÐ¼Ð¾Ð½Ð°
         }
 
         public bool IsDemon => entry.isDemon;
         public bool IsAlive => state == CardState.OpenAlive || state == CardState.Closed;
         public bool IsOpen => state != CardState.Closed;
+
+        private string GetMaskedRoleText()
+        {
+            if (entry.isDemon)
+            {
+                return CardType.Villager.ToString();
+            }
+
+            return entry.cardDefinition.roleType.ToString();
+        }
     }
 }
