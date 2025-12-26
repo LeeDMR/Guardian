@@ -17,22 +17,28 @@ MonoBehaviour:
   demonsToKill: 2
   cards:
   - cardDefinition: {fileID: 11400000, guid: 0b0774ef294797d44960abcac13bfa3c, type: 2}
+    trueDefinition: {fileID: 11400000, guid: 0b0774ef294797d44960abcac13bfa3c, type: 2}
     statementText: "\u041A\u0430\u0440\u0442\u0430 #2 - Demon"
     isDemon: 0
-  - cardDefinition: {fileID: 11400000, guid: 3896c31b0062a904a84efde72a3dd182, type: 2}
+  - cardDefinition: {fileID: 11400000, guid: 787bf83e488ab3d4898c17da928f68a4, type: 2}
+    trueDefinition: {fileID: 11400000, guid: 3896c31b0062a904a84efde72a3dd182, type: 2}
     statementText: "\u041A\u0430\u0440\u0442\u0430 #3 - Demon"
     isDemon: 1
   - cardDefinition: {fileID: 11400000, guid: 0934002b67869294b9f994468f3338ae, type: 2}
+    trueDefinition: {fileID: 0}
     statementText: "\u0421\u0440\u0435\u0434\u0438 \u043A\u0430\u0440\u0442 #5 \u0438
       #6 \u0440\u043E\u0432\u043D\u043E \u043E\u0434\u0438\u043D \u0434\u0435\u043C\u043E\u043D."
     isDemon: 0
   - cardDefinition: {fileID: 11400000, guid: 787bf83e488ab3d4898c17da928f68a4, type: 2}
+    trueDefinition: {fileID: 11400000, guid: 787bf83e488ab3d4898c17da928f68a4, type: 2}
     statementText: "\u0421\u0440\u0435\u0434\u0438 \u043A\u0430\u0440\u0442 #1, #2
       \u0438 #3 \u0440\u043E\u0432\u043D\u043E \u043E\u0434\u0438\u043D \u0434\u0435\u043C\u043E\u043D."
     isDemon: 0
-  - cardDefinition: {fileID: 11400000, guid: 3896c31b0062a904a84efde72a3dd182, type: 2}
+  - cardDefinition: {fileID: 11400000, guid: 787bf83e488ab3d4898c17da928f68a4, type: 2}
+    trueDefinition: {fileID: 11400000, guid: 3896c31b0062a904a84efde72a3dd182, type: 2}
     statementText: "\u041A\u0430\u0440\u0442\u0430 #6 \u2014 \u0434\u0435\u043C\u043E\u043D."
     isDemon: 1
   - cardDefinition: {fileID: 11400000, guid: 0b0774ef294797d44960abcac13bfa3c, type: 2}
+    trueDefinition: {fileID: 11400000, guid: 0b0774ef294797d44960abcac13bfa3c, type: 2}
     statementText: "\u041A\u0430\u0440\u0442\u0430 #4 \u2014 \u0436\u0438\u0442\u0435\u043B\u044C."
     isDemon: 0

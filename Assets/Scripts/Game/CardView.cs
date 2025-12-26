@@ -2,18 +2,13 @@ using Guardian.Data;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.EventSystems;
 
 namespace Guardian.Game
 {
-    public enum CardState
-    {
-        Closed,
-        OpenAlive,
-        DeadVillager,
-        DeadDemon
-    }
+    public enum CardState { Closed, OpenAlive, DeadVillager, DeadDemon }
 
-    public class CardView : MonoBehaviour
+    public class CardView : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         [Header("UI")]
         public Button button;
@@ -21,13 +16,36 @@ namespace Guardian.Game
         public TextMeshProUGUI roleText;
         public TextMeshProUGUI statementText;
 
+        [Header("Kill Mode Visuals")]
+        public Image highlightOverlay;          // <-- привяжи HighlightOverlay сюда
+        public float highlightAlpha = 0.20f;    // обычная подсветка
+        public float hoverAlpha = 0.35f;        // подсветка при наведении
+        public float hoverScale = 1.03f;        // лёгкий zoom при наведении
+
         [Header("Runtime data")]
-        public int index;
-        public LevelCardEntry entry;
+        [HideInInspector] public int index;
+        [HideInInspector] public LevelCardEntry entry;
 
         private CardState state = CardState.Closed;
         private BoardManager boardManager;
+
+        private bool killSelectable = false;
+        private Vector3 baseScale;
+
+        // Демон: истина (если используешь trueDefinition из 1-го варианта)
         private CardDefinition TruthDef => entry.trueDefinition != null ? entry.trueDefinition : entry.cardDefinition;
+
+        public bool IsDemon => entry != null && entry.isDemon;
+        public bool IsOpen => state != CardState.Closed;
+        public bool CanBeKilled => state == CardState.OpenAlive; // убиваем только открытые живые
+
+        public bool IsKillSelectable => killSelectable;
+
+        private void Awake()
+        {
+            baseScale = transform.localScale;
+            SetHighlight(false, 0f);
+        }
 
         public void Init(int index, LevelCardEntry entry, BoardManager boardManager)
         {
@@ -35,16 +53,21 @@ namespace Guardian.Game
             this.entry = entry;
             this.boardManager = boardManager;
 
-            // В начале карта закрыта
-            SetClosedVisual();
+            state = CardState.Closed;
+
+            if (button == null)
+                button = GetComponent<Button>();
 
             button.onClick.RemoveAllListeners();
             button.onClick.AddListener(OnClick);
+
+            SetClosedVisual();
+            SetKillSelectable(false);
         }
 
         private void OnClick()
         {
-            boardManager.OnCardClicked(this);
+            boardManager?.OnCardClicked(this);
         }
 
         public void Reveal()
@@ -59,7 +82,7 @@ namespace Guardian.Game
         {
             if (state != CardState.OpenAlive) return;
 
-            if (entry.isDemon)
+            if (IsDemon)
             {
                 state = CardState.DeadDemon;
                 SetDeadDemonVisual();
@@ -69,6 +92,47 @@ namespace Guardian.Game
                 state = CardState.DeadVillager;
                 SetDeadVillagerVisual();
             }
+
+            // после смерти карта больше не выбирается
+            SetKillSelectable(false);
+        }
+
+        public void SetKillSelectable(bool value)
+        {
+            killSelectable = value;
+
+            if (!killSelectable)
+            {
+                SetHighlight(false, 0f);
+                transform.localScale = baseScale;
+            }
+            else
+            {
+                SetHighlight(true, highlightAlpha);
+            }
+        }
+
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            if (!killSelectable) return;
+            SetHighlight(true, hoverAlpha);
+            transform.localScale = baseScale * hoverScale;
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            if (!killSelectable) return;
+            SetHighlight(true, highlightAlpha);
+            transform.localScale = baseScale;
+        }
+
+        private void SetHighlight(bool enabled, float alpha)
+        {
+            if (highlightOverlay == null) return;
+            highlightOverlay.enabled = enabled;
+            var c = highlightOverlay.color;
+            c.a = alpha;
+            highlightOverlay.color = c;
         }
 
         private void SetClosedVisual()
@@ -76,12 +140,12 @@ namespace Guardian.Game
             nameText.text = "???";
             roleText.text = "";
             statementText.text = "";
-            // Можно поменять цвет кнопки, чтобы выглядела как рубашка карты
         }
 
         private void SetOpenAliveVisual()
         {
-            var visible = entry.cardDefinition;   // МАСКА
+            // показываем МАСКУ (как ты хотел)
+            var visible = entry.cardDefinition;
             nameText.text = visible.displayName;
             roleText.text = visible.roleType.ToString();
             statementText.text = entry.statementText;
@@ -91,31 +155,14 @@ namespace Guardian.Game
         {
             nameText.text = entry.cardDefinition.displayName;
             roleText.text = "Невинный погиб";
-            // Можно добавить иконку черепа, другой цвет фона
         }
 
         private void SetDeadDemonVisual()
         {
-            var truth = TruthDef; // ИСТИНА (Demon_Liar и т.п.)
+            // показываем ИСТИНУ демона
+            var truth = TruthDef;
             nameText.text = "Демон уничтожен";
-            roleText.text = truth.displayName; // например "Лжец"
-                                               // statementText можно оставить или очистить:
-                                               // statementText.text = "";
-        }
-
-        public bool IsDemon => entry.isDemon;
-        public bool IsAlive => state == CardState.OpenAlive || state == CardState.Closed;
-        public bool IsOpen => state != CardState.Closed;
-
-        private string GetMaskedRoleText()
-        {
-            if (entry.isDemon)
-            {
-                return CardType.Villager.ToString();
-
-            }
-
-            return entry.cardDefinition.roleType.ToString();
+            roleText.text = truth.displayName;
         }
     }
-};
+}
