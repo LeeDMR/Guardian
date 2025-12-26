@@ -23,14 +23,15 @@ namespace Guardian.Data
     [Serializable]
     public class LevelCardEntry
     {
-        [Tooltip("What type of card is in this slot?")]
+        [Tooltip("То, что игрок видит при вскрытии (маска/обложка)")]
         public CardDefinition cardDefinition;
 
+        [Tooltip("Истинная сущность (для демона укажи Demon_..., для жителей можно оставить пустым)")]
+        public CardDefinition trueDefinition;
+
         [TextArea(2, 4)]
-        [Tooltip("The final hint text that the player will see")]
         public string statementText;
 
-        [Tooltip("Is this card a demon in the layout?")]
         public bool isDemon;
     }
 }

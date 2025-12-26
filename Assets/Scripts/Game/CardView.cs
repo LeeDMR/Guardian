@@ -27,6 +27,7 @@ namespace Guardian.Game
 
         private CardState state = CardState.Closed;
         private BoardManager boardManager;
+        private CardDefinition TruthDef => entry.trueDefinition != null ? entry.trueDefinition : entry.cardDefinition;
 
         public void Init(int index, LevelCardEntry entry, BoardManager boardManager)
         {
@@ -80,10 +81,10 @@ namespace Guardian.Game
 
         private void SetOpenAliveVisual()
         {
-            nameText.text = entry.cardDefinition.displayName;
-            roleText.text = entry.cardDefinition.roleType.ToString();
+            var visible = entry.cardDefinition;   // МАСКА
+            nameText.text = visible.displayName;
+            roleText.text = visible.roleType.ToString();
             statementText.text = entry.statementText;
-            // Можно поменять цвет/иконку для «живой, открытой» карты
         }
 
         private void SetDeadVillagerVisual()
@@ -95,13 +96,26 @@ namespace Guardian.Game
 
         private void SetDeadDemonVisual()
         {
+            var truth = TruthDef; // ИСТИНА (Demon_Liar и т.п.)
             nameText.text = "Демон уничтожен";
-            roleText.text = entry.cardDefinition.displayName;
-            // Здесь можно показывать «истинный облик», позже — спрайт демона
+            roleText.text = truth.displayName; // например "Лжец"
+                                               // statementText можно оставить или очистить:
+                                               // statementText.text = "";
         }
 
         public bool IsDemon => entry.isDemon;
         public bool IsAlive => state == CardState.OpenAlive || state == CardState.Closed;
         public bool IsOpen => state != CardState.Closed;
+
+        private string GetMaskedRoleText()
+        {
+            if (entry.isDemon)
+            {
+                return CardType.Villager.ToString();
+
+            }
+
+            return entry.cardDefinition.roleType.ToString();
+        }
     }
-}
+};
