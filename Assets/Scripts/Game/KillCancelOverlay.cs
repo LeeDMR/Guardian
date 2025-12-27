@@ -1,6 +1,15 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
-public class KillCancelOverlay
+namespace Guardian.Game
 {
-    
+    public class KillCancelOverlay : MonoBehaviour, IPointerClickHandler
+    {
+        public BoardManager boardManager;
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            boardManager?.CancelKillMode();
+        }
+    }
 }

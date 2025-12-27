@@ -69,8 +69,8 @@ namespace Guardian.Game
 
         private void UpdateUI()
         {
-            if (livesText != null) livesText.text = $"Жизни: {currentLives}";
-            if (demonsText != null) demonsText.text = $"Демоны: {demonsRemaining}";
+            if (livesText != null) livesText.text = $"{currentLives}";
+            if (demonsText != null) demonsText.text = $"{demonsRemaining}";
         }
 
         // КНОПКА KILL теперь включает/выключает режим
