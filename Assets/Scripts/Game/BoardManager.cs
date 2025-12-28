@@ -17,6 +17,9 @@ namespace Guardian.Game
         public CardView cardViewPrefab;
         public Transform cardsParent;
 
+        [Header("UI Toolkit Overlay (optional)")]
+        public BoardUIToolkitBridge uiBridge;
+
         [Header("Top UI")]
         public TextMeshProUGUI livesText;
         public TextMeshProUGUI demonsText;
@@ -152,6 +155,7 @@ namespace Guardian.Game
 
             foreach (var c in cardViews)
                 c.SetKillSelectable(c.CanBeKilled);
+            uiBridge?.SetKillMode(true);
         }
 
         public void CancelKillMode()
@@ -163,6 +167,7 @@ namespace Guardian.Game
 
             foreach (var c in cardViews)
                 c.SetKillSelectable(false);
+            uiBridge?.SetKillMode(false);
         }
 
         public void OnCardClicked(CardView card)
@@ -211,12 +216,14 @@ namespace Guardian.Game
         {
             selected = card;
             if (detailsPanel) detailsPanel.Show(card);
+            uiBridge?.SetSelected(selected);
         }
 
         private void DeselectCard()
         {
             selected = null;
             if (detailsPanel) detailsPanel.Hide();
+            uiBridge?.SetSelected(null);
         }
 
         /// <summary>
@@ -253,6 +260,8 @@ namespace Guardian.Game
             }
 
             BeginAbilityTargeting(source, kind, requiredTargets);
+
+            uiBridge?.RefreshSelected();
         }
 
         private (AbilityKind kind, int requiredTargets) GetAbilityConfig(CardView card)
@@ -484,6 +493,7 @@ namespace Guardian.Game
         {
             if (livesText) livesText.text = $"{lives}";
             if (demonsText) demonsText.text = $"{demonsRemaining}";
+            uiBridge?.SetStats(lives, demonsRemaining);
         }
 
         private void ShowBubble(CardView card, string message)
@@ -545,6 +555,11 @@ namespace Guardian.Game
 
         private bool IsPointerOverKillButton()
         {
+            if (uiBridge != null && Pointer.current != null)
+            {
+                if (uiBridge.IsPointerOverKillButton(Pointer.current.position.ReadValue()))
+                    return true;
+            }
             if (EventSystem.current == null || killButton == null) return false;
             if (Pointer.current == null) return false;
 
@@ -565,6 +580,11 @@ namespace Guardian.Game
 
         private bool IsPointerOverDetailsPanel()
         {
+            if (uiBridge != null && Pointer.current != null)
+            {
+                if (uiBridge.IsPointerOverDetailsPanel(Pointer.current.position.ReadValue()))
+                    return true;
+            }
             if (EventSystem.current == null || detailsPanel == null) return false;
             if (Pointer.current == null) return false;
 

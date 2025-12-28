@@ -1,0 +1,140 @@
+.root {
+    width: 100%;
+    height: 100%;
+    background-color: rgba(15, 16, 18, 0.0);
+}
+
+.topbar {
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    top: 18px;
+    height: 72px;
+
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+
+    padding-left: 14px;
+    padding-right: 14px;
+
+    background-color: rgba(35, 38, 44, 0.90);
+    border-radius: 16px;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgba(255,255,255,0.08);
+    border-right-color: rgba(255,255,255,0.08);
+    border-top-color: rgba(255,255,255,0.08);
+    border-bottom-color: rgba(255,255,255,0.08);
+}
+
+.stat {
+    padding-left: 14px;
+    padding-right: 14px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+
+    background-color: rgba(255,255,255,0.06);
+    border-radius: 14px;
+    min-width: 140px;
+}
+
+.stat-label {
+    color: rgba(255,255,255,0.70);
+    font-size: 12px;
+}
+
+.stat-value {
+    color: white;
+    font-size: 22px;
+    unity-font-style: bold;
+}
+
+.spacer {
+    flex-grow: 1;
+}
+
+.layout {
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    top: 104px;
+    bottom: 24px;
+
+    flex-direction: row;
+    gap: 18px;
+}
+
+.board {
+    flex-grow: 1;
+    background-color: rgba(255,255,255,0.04);
+    border-radius: 18px;
+}
+
+.details {
+    width: 380px;
+    padding: 16px;
+    gap: 12px;
+
+    background-color: rgba(35, 38, 44, 0.90);
+    border-radius: 18px;
+
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgba(255,255,255,0.08);
+    border-right-color: rgba(255,255,255,0.08);
+    border-top-color: rgba(255,255,255,0.08);
+    border-bottom-color: rgba(255,255,255,0.08);
+}
+
+.portrait {
+    height: 220px;
+    border-radius: 16px;
+    background-color: rgba(255,255,255,0.06);
+}
+
+.title {
+    color: white;
+    font-size: 18px;
+    unity-font-style: bold;
+}
+
+.desc {
+    color: rgba(255,255,255,0.75);
+    font-size: 13px;
+    white-space: normal;
+    flex-grow: 1;
+}
+
+.btn {
+    height: 44px;
+    border-radius: 14px;
+    background-color: rgba(255,255,255,0.10);
+    color: white;
+}
+
+.btn:hover {
+    background-color: rgba(255,255,255,0.16);
+}
+
+.btn:active {
+    background-color: rgba(255,255,255,0.20);
+}
+
+.btn:disabled {
+    opacity: 0.45;
+}
+
+.danger {
+    background-color: rgba(220, 65, 65, 0.95);
+}
+.danger:hover {
+    background-color: rgba(240, 85, 85, 0.95);
+}
+.danger.active {
+    background-color: rgba(160,160,160,0.95);
+}

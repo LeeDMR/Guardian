@@ -17,4 +17,9 @@ MonoBehaviour:
   cardType: 0
   roleType: 3
   portrait: {fileID: 0}
-  statementTemplate: 
+  hasAbility: 1
+  description: asdasd
+  abilityButtonText: "\u0418\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u044C
+    \u0441\u043F\u043E\u0441\u043E\u0431\u043D\u043E\u0441\u0442\u044C"
+  revealDialogue: dasd
+  abilityIntroDialogue: asdas
