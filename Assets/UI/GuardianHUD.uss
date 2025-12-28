@@ -149,14 +149,6 @@
     background-color: rgba(160,160,160,0.95);
 }
 
-.details {
-  opacity: 0;
-  transition-property: opacity;
-  transition-duration: 180ms;
-}
-
-.details.shown { opacity: 1; }
-
 /* ===== Overlay details panel (do not reflow cards) ===== */
 .details {
     position: absolute;
@@ -169,9 +161,12 @@
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transform: translateX(8px);
 
-    transition-property: opacity, transform;
+    /* UI Toolkit uses translate/rotate/scale instead of CSS "transform" */
+    translate: 8px 0px;
+
+    /* Keep transitions simple for runtime stability */
+    transition-property: opacity;
     transition-duration: 180ms;
 }
 
@@ -179,7 +174,7 @@
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
-    transform: translateX(0);
+    translate: 0px 0px;
 }
 
 /* ===== Speech bubble (UI Toolkit) ===== */
@@ -198,21 +193,22 @@
     visibility: hidden;
     pointer-events: none;
 
-    transform: translateY(6px);
-    transition-property: opacity, transform;
+    translate: 0px 6px;
+    /* Keep transitions simple for runtime stability */
+    transition-property: opacity;
     transition-duration: 150ms;
 }
 
 .speech.shown {
     opacity: 1;
     visibility: visible;
-    transform: translateY(0);
+    translate: 0px 0px;
 }
 
 .speech.hidden {
     opacity: 0;
     visibility: hidden;
-    transform: translateY(6px);
+    translate: 0px 6px;
 }
 
 .speech__text {
