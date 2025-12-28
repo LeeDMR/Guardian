@@ -5,7 +5,7 @@ namespace Guardian.Game
 {
     public class KillCancelOverlay : MonoBehaviour, IPointerClickHandler
     {
-        public BoardManager boardManager;
+        [SerializeField] private BoardManager boardManager;
 
         public void OnPointerClick(PointerEventData eventData)
         {

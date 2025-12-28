@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 
 namespace Guardian.Game
 {
@@ -72,9 +73,11 @@ namespace Guardian.Game
 
         void Update()
         {
-            // отмена KillMode по клику “мимо карт”
             if (!isKillMode) return;
-            if (!Input.GetMouseButtonDown(0)) return;
+
+            // ждём именно клик/тап, а не просто движение мыши
+            if (Pointer.current == null) return;
+            if (!Pointer.current.press.wasPressedThisFrame) return;
 
             if (IsPointerOverCard()) return;
             if (IsPointerOverKillButton()) return;
@@ -201,9 +204,10 @@ namespace Guardian.Game
         bool IsPointerOverCard()
         {
             if (EventSystem.current == null) return false;
+            if (Pointer.current == null) return false;
 
             pointerData ??= new PointerEventData(EventSystem.current);
-            pointerData.position = Input.mousePosition;
+            pointerData.position = Pointer.current.position.ReadValue();
 
             raycastResults.Clear();
             EventSystem.current.RaycastAll(pointerData, raycastResults);
@@ -218,9 +222,10 @@ namespace Guardian.Game
         bool IsPointerOverKillButton()
         {
             if (EventSystem.current == null || killButton == null) return false;
+            if (Pointer.current == null) return false;
 
             pointerData ??= new PointerEventData(EventSystem.current);
-            pointerData.position = Input.mousePosition;
+            pointerData.position = Pointer.current.position.ReadValue();
 
             raycastResults.Clear();
             EventSystem.current.RaycastAll(pointerData, raycastResults);
