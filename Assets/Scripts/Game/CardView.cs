@@ -28,6 +28,8 @@ namespace Guardian.Game
         [HideInInspector] public int index;
         [HideInInspector] public LevelCardEntry entry;
 
+        public int Index => index;
+
         CardState state = CardState.Closed;
         BoardManager board;
 

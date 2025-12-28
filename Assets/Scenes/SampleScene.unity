@@ -353,7 +353,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &287708730
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1230,12 +1230,13 @@ MonoBehaviour:
   levelDefinition: {fileID: 11400000, guid: d515916d347f0a540beb2659f58ad819, type: 2}
   cardViewPrefab: {fileID: 5058818275945383821, guid: c4994a0d8ed9f52498ce64256e26f6d1, type: 3}
   cardsParent: {fileID: 1310567534}
+  uiBridge: {fileID: 2099115745}
   livesText: {fileID: 1230775308}
   demonsText: {fileID: 1494307335}
   killButton: {fileID: 1842915830}
   killButtonImage: {fileID: 1842915831}
   killButtonLabel: {fileID: 147592413}
-  detailsPanel: {fileID: 1302270668}
+  detailsPanel: {fileID: 0}
   canvas: {fileID: 1823168798}
   speechBubblePrefab: {fileID: -8407638905366807756, guid: c72a5a1c0ffebd144ae912b4cb0b3efe, type: 3}
 --- !u!4 &656557451
@@ -1620,7 +1621,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1302270665
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2284,7 +2285,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1842915829
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2530,6 +2531,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2099115744}
   - component: {fileID: 2099115743}
+  - component: {fileID: 2099115745}
   m_Layer: 0
   m_Name: GuairdianUI
   m_TagString: Untagged
@@ -2575,6 +2577,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2099115745
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2099115742}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44a21870efe9981458cc534b10ae4786, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Guardian.Game.BoardUIToolkitBridge
+  doc: {fileID: 2099115743}
+  board: {fileID: 656557450}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

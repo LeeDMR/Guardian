@@ -42,6 +42,9 @@ namespace Guardian.Game
         private int lives;
         private int demonsRemaining;
 
+        public CardView SelectedCard => selected;
+        public bool IsKillMode => mode == InteractionMode.Kill;
+        public bool IsAbilityTargeting => mode == InteractionMode.AbilityTargeting;
         private enum InteractionMode
         {
             Normal,
@@ -105,6 +108,8 @@ namespace Guardian.Game
                 cv.Init(i, entry, this);
                 cardViews[i] = cv;
             }
+            uiBridge?.BuildCards(cardViews);
+            uiBridge?.RefreshAllCards();
         }
 
         private void Update()
@@ -112,6 +117,12 @@ namespace Guardian.Game
             // Мы работаем через New Input System.
             if (Pointer.current == null) return;
             if (!Pointer.current.press.wasPressedThisFrame) return;
+
+            // Важно: клики по UI Toolkit не должны сбрасывать выбор/режимы в BoardManager.
+            // Иначе при клике по кнопке "Use ability" сначала сработает DeselectCard(),
+            // и до обработчика UITK дойдёт уже current == null.
+            if (uiBridge != null && uiBridge.IsPointerOverAnyUI(Pointer.current.position.ReadValue()))
+                return;
 
             // 1) Kill mode: клик мимо карт/кнопки -> отмена
             if (mode == InteractionMode.Kill)
@@ -156,6 +167,7 @@ namespace Guardian.Game
             foreach (var c in cardViews)
                 c.SetKillSelectable(c.CanBeKilled);
             uiBridge?.SetKillMode(true);
+            uiBridge?.RefreshAllCards();
         }
 
         public void CancelKillMode()
@@ -168,6 +180,7 @@ namespace Guardian.Game
             foreach (var c in cardViews)
                 c.SetKillSelectable(false);
             uiBridge?.SetKillMode(false);
+            uiBridge?.RefreshAllCards();
         }
 
         public void OnCardClicked(CardView card)
@@ -181,6 +194,7 @@ namespace Guardian.Game
                 {
                     bool wasDemon = card.entry.isDemon;
                     card.Kill();
+                    uiBridge?.RefreshAllCards();
 
                     if (wasDemon) demonsRemaining--;
                     else lives--;
@@ -204,6 +218,7 @@ namespace Guardian.Game
             if (!card.IsOpen)
             {
                 card.Reveal();
+                uiBridge?.RefreshAllCards();
                 ShowBubble(card, card.VisibleDefinition.revealDialogue);
                 return;
             }
@@ -217,6 +232,7 @@ namespace Guardian.Game
             selected = card;
             if (detailsPanel) detailsPanel.Show(card);
             uiBridge?.SetSelected(selected);
+            uiBridge?.RefreshAllCards();
         }
 
         private void DeselectCard()
@@ -224,6 +240,7 @@ namespace Guardian.Game
             selected = null;
             if (detailsPanel) detailsPanel.Hide();
             uiBridge?.SetSelected(null);
+            uiBridge?.RefreshAllCards();
         }
 
         /// <summary>
@@ -262,6 +279,7 @@ namespace Guardian.Game
             BeginAbilityTargeting(source, kind, requiredTargets);
 
             uiBridge?.RefreshSelected();
+            uiBridge?.RefreshAllCards();
         }
 
         private (AbilityKind kind, int requiredTargets) GetAbilityConfig(CardView card)
@@ -359,6 +377,7 @@ namespace Guardian.Game
 
             if (abilityRequest.targets.Count >= abilityRequest.requiredTargets)
                 ResolveAbilityTargeting();
+            uiBridge?.RefreshAllCards();
         }
 
         private void ResolveAbilityTargeting()
@@ -395,6 +414,7 @@ namespace Guardian.Game
                 c.SetAbilityTargetSelected(false);
                 c.SetAbilitySelectable(false);
             }
+            uiBridge?.RefreshAllCards();
         }
 
         private string BuildAbilityText(CardView speaker, AbilityKind kind, List<CardView> targets)

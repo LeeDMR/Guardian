@@ -1,0 +1,13 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/CardTile.uss?fileID=7433441132597879392&amp;guid=f7ed7d2cfd121b148846e11536efc8db&amp;type=3#CardTile" />
+    <ui:Button name="CardTile" class="card">
+        <ui:VisualElement name="FaceDown" class="card-face-down">
+            <ui:Label name="Unknown" text="???" class="card-unknown" />
+        </ui:VisualElement>
+        <ui:VisualElement name="FaceUp" class="card-face-up">
+            <ui:VisualElement name="Portrait" class="card-portrait" />
+            <ui:Label name="Title" text="Priest" class="card-title" />
+        </ui:VisualElement>
+        <ui:Label name="Number" text="1" class="card-number" />
+    </ui:Button>
+</ui:UXML>
