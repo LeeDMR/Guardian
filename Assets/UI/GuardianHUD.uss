@@ -69,7 +69,7 @@
 
 .board {
     flex-grow: 1;
-    background-color: rgba(0,0,0,0);   /* полностью прозрачно */
+    background-color: rgba(0,0,0,0);   /* fully transparent */
     border-radius: 18px;
 
     border-left-width: 1px;
@@ -156,3 +156,66 @@
 }
 
 .details.shown { opacity: 1; }
+
+/* ===== Overlay details panel (do not reflow cards) ===== */
+.details {
+    position: absolute;
+    right: 24px;
+    top: 76px;
+    bottom: 24px;
+    z-index: 10;
+
+    /* hidden by default (no layout shift, no clicks) */
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(8px);
+
+    transition-property: opacity, transform;
+    transition-duration: 180ms;
+}
+
+.details.shown {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(0);
+}
+
+/* ===== Speech bubble (UI Toolkit) ===== */
+.speech {
+    position: absolute;
+    z-index: 20;
+    max-width: 320px;
+
+    padding: 10px 12px;
+    border-radius: 14px;
+
+    background-color: rgba(0,0,0,0.75);
+    color: white;
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+
+    transform: translateY(6px);
+    transition-property: opacity, transform;
+    transition-duration: 150ms;
+}
+
+.speech.shown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.speech.hidden {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(6px);
+}
+
+.speech__text {
+    white-space: normal;
+    font-size: 13px;
+}

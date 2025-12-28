@@ -203,11 +203,10 @@ namespace Guardian.Game
         /// </summary>
         public bool IsPointerOverAnyUI(Vector2 screenPos)
         {
-            if (root == null) return false;
+            if (root == null || root.panel == null) return false;
 
-            // Если курсор над любым элементом UITK — считаем, что это UI-клик
-            // (кнопка "Use ability" точно попадёт сюда)
-            var picked = root.panel?.Pick(screenPos);
+            Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(root.panel, screenPos);
+            var picked = root.panel.Pick(panelPos);
             return picked != null;
         }
 
@@ -249,5 +248,59 @@ namespace Guardian.Game
                 if (e == parent) return true;
             return false;
         }
+        public void ShowSpeechNearCard(CardView card, string message)
+        {
+            if (board == null || card == null) return;
+            if (string.IsNullOrWhiteSpace(message)) return;
+
+            if (TryGetCardBubbleAnchor(card.Index, out var screenPoint, out var placeLeft))
+                board.ShowBubbleAtScreenPoint(screenPoint, placeLeft, message);
+        }
+
+        bool TryGetCardBubbleAnchor(int index, out Vector2 screenPoint, out bool placeLeft)
+        {
+            screenPoint = default;
+            placeLeft = false;
+
+            if (index < 0 || index >= cardRoots.Count) return false;
+
+            var ve = cardRoots[index];
+            if (ve == null) return false;
+
+            IPanel panel = ve.panel;
+            if (panel == null) return false;
+
+            var wb = ve.worldBound; // panel coords
+            var topRightPanel = new Vector2(wb.xMax, wb.yMin);
+            var topLeftPanel = new Vector2(wb.xMin, wb.yMin);
+
+            // Convert panel -> screen without PanelToScreenPoint
+            var topRightScreen = PanelToScreenApprox(panel, topRightPanel);
+            var topLeftScreen = PanelToScreenApprox(panel, topLeftPanel);
+
+            placeLeft = topRightScreen.x > Screen.width * 0.65f;
+            screenPoint = placeLeft ? topLeftScreen : topRightScreen;
+
+            return true;
+        }
+
+        static Vector2 PanelToScreenApprox(IPanel panel, Vector2 panelPos)
+        {
+            // Candidate A: assume panel coords == screen coords
+            Vector2 s1 = panelPos;
+
+            // Candidate B: flipped Y
+            Vector2 s2 = new Vector2(panelPos.x, Screen.height - panelPos.y);
+
+            // Pick the candidate that maps back closest to the original panelPos
+            Vector2 p1 = RuntimePanelUtils.ScreenToPanel(panel, s1);
+            Vector2 p2 = RuntimePanelUtils.ScreenToPanel(panel, s2);
+
+            float d1 = (p1 - panelPos).sqrMagnitude;
+            float d2 = (p2 - panelPos).sqrMagnitude;
+
+            return d1 <= d2 ? s1 : s2;
+        }
+
     }
 }

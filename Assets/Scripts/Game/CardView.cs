@@ -47,7 +47,9 @@ namespace Guardian.Game
 
         public bool IsOpen => state != CardState.Closed;
         public bool IsDead => state == CardState.DeadDemon || state == CardState.DeadVillager;
-        public bool CanBeKilled => state == CardState.OpenAlive;
+        // Kill mode should be able to kill BOTH revealed and unrevealed cards.
+        // (If a card is unrevealed, we'll reveal it upon death.)
+        public bool CanBeKilled => !IsDead;
         public bool IsKillSelectable => killSelectable;
         public bool IsAbilitySelectable => abilitySelectable;
         public bool CanUseAbility => state == CardState.OpenAlive && !abilityUsed && VisibleDefinition != null && VisibleDefinition.hasAbility;
@@ -110,7 +112,13 @@ namespace Guardian.Game
 
         public void Kill()
         {
-            if (state != CardState.OpenAlive) return;
+            if (IsDead) return;
+
+            // If the card is unrevealed, reveal it first so the player sees what died.
+            if (state == CardState.Closed)
+            {
+                Reveal();
+            }
 
             if (entry.isDemon)
             {

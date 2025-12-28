@@ -107,6 +107,12 @@ namespace Guardian.Game
                 var cv = Instantiate(cardViewPrefab, cardsParent);
                 cv.Init(i, entry, this);
                 cardViews[i] = cv;
+
+                // When UI Toolkit cards are used, we keep CardView objects only as data/state holders.
+                // Disable their GameObjects so they don't intercept pointer events (UGUI) and don't
+                // visually overlap with UI Toolkit.
+                if (uiBridge != null)
+                    cv.gameObject.SetActive(false);
             }
             uiBridge?.BuildCards(cardViews);
             uiBridge?.RefreshAllCards();
@@ -159,6 +165,9 @@ namespace Guardian.Game
 
         private void EnterKillMode()
         {
+			// Hide details panel: in kill mode we don't want selection UI to interfere.
+			DeselectCard();
+
             mode = InteractionMode.Kill;
 
             if (killButtonImage) killButtonImage.color = new Color(0.6f, 0.6f, 0.6f, killButtonImage.color.a);
@@ -187,10 +196,11 @@ namespace Guardian.Game
         {
             if (card == null) return;
 
-            // 1) KILL MODE: убиваем только подсвеченные
+            // 1) KILL MODE: убиваем и закрытые, и раскрытые карты
             if (mode == InteractionMode.Kill)
             {
-                if (card.IsKillSelectable)
+                // Не полагаемся на IsKillSelectable (UI может не успеть/не подсветить).
+                if (card.CanBeKilled)
                 {
                     bool wasDemon = card.entry.isDemon;
                     card.Kill();
@@ -519,12 +529,47 @@ namespace Guardian.Game
         private void ShowBubble(CardView card, string message)
         {
             if (string.IsNullOrWhiteSpace(message)) return;
+
+            // Prefer UI Toolkit speech bubble (it is anchored to UI Toolkit cards).
+            if (uiBridge != null && card != null)
+            {
+                uiBridge.ShowSpeechNearCard(card, message);
+                return;
+            }
+
             if (canvas == null) canvas = Object.FindAnyObjectByType<Canvas>();
 
             if (bubble == null)
                 bubble = Instantiate(speechBubblePrefab, canvas.transform);
 
-            PositionBubbleNearCard(card.GetComponent<RectTransform>(), bubble.rect);
+            var cardRect = card != null ? card.GetComponent<RectTransform>() : null;
+            if (cardRect != null)
+                PositionBubbleNearCard(cardRect, bubble.rect);
+            bubble.Show(message, 2.2f);
+        }
+
+        public void ShowBubbleAtScreenPoint(Vector2 screenPoint, bool placeLeft, string message)
+        {
+            if (string.IsNullOrWhiteSpace(message)) return;
+
+            if (canvas == null)
+                canvas = FindAnyObjectByType<Canvas>();
+
+            if (bubble == null)
+                bubble = Instantiate(speechBubblePrefab, canvas.transform);
+
+            var canvasRect = canvas.GetComponent<RectTransform>();
+            var cam = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screenPoint, cam, out Vector2 localPoint);
+
+            var bubbleRect = bubble.rect;
+            bubbleRect.pivot = placeLeft ? new Vector2(1f, 1f) : new Vector2(0f, 1f);
+            bubbleRect.anchorMin = bubbleRect.anchorMax = new Vector2(0.5f, 0.5f);
+
+            Vector2 offset = placeLeft ? new Vector2(-18f, -10f) : new Vector2(18f, -10f);
+            bubbleRect.anchoredPosition = localPoint + offset;
+
             bubble.Show(message, 2.2f);
         }
 
