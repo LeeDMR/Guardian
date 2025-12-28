@@ -19,6 +19,13 @@ namespace Guardian.Game
         public void Init(BoardManager boardManager)
         {
             board = boardManager;
+
+            // Чтобы кнопка работала даже если забыли привязать OnClick в инспекторе.
+            if (useAbilityButton)
+            {
+                useAbilityButton.onClick.RemoveAllListeners();
+                useAbilityButton.onClick.AddListener(OnUseAbilityClicked);
+            }
             Hide();
         }
 
@@ -51,7 +58,7 @@ namespace Guardian.Game
                 useAbilityButtonLabel.text = canUse ? def.abilityButtonText : "Способность использована";
         }
 
-        // повесь на кнопку в инспекторе
+        // Можно вешать на кнопку в инспекторе, но мы также привязываем в Init() автоматически.
         public void OnUseAbilityClicked()
         {
             if (current == null) return;

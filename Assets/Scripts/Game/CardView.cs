@@ -32,19 +32,23 @@ namespace Guardian.Game
         BoardManager board;
 
         bool killSelectable;
+        bool abilitySelectable;
+        bool abilityTargetSelected;
         bool abilityUsed;
         Vector3 baseScale;
 
-        // “маска” (что видит игрок при раскрытии)
+        // "маска" (то, что видит игрок при раскрытии)
         public CardDefinition VisibleDefinition => entry.cardDefinition;
 
-        // “истина” (если есть trueDefinition)
+        // "истина" (если есть trueDefinition)
         public CardDefinition TruthDefinition => entry.trueDefinition != null ? entry.trueDefinition : entry.cardDefinition;
 
         public bool IsOpen => state != CardState.Closed;
+        public bool IsDead => state == CardState.DeadDemon || state == CardState.DeadVillager;
         public bool CanBeKilled => state == CardState.OpenAlive;
         public bool IsKillSelectable => killSelectable;
-        public bool CanUseAbility => state == CardState.OpenAlive && !abilityUsed;
+        public bool IsAbilitySelectable => abilitySelectable;
+        public bool CanUseAbility => state == CardState.OpenAlive && !abilityUsed && VisibleDefinition != null && VisibleDefinition.hasAbility;
 
         private void Awake()
         {
@@ -70,12 +74,15 @@ namespace Guardian.Game
             button.onClick.AddListener(() => board.OnCardClicked(this));
 
             abilityUsed = false;
+            abilitySelectable = false;
+            abilityTargetSelected = false;
             state = CardState.Closed;
 
             if (numberText) numberText.text = (index + 1).ToString();
 
             SetClosedVisual();
             SetKillSelectable(false);
+            SetAbilitySelectable(false);
         }
 
         public void Reveal()
@@ -85,18 +92,18 @@ namespace Guardian.Game
             SetOpenVisual();
         }
 
-        public string UseAbility()
+        /// <summary>
+        /// Помечает способность использованной и возвращает интро-реплику (если задана).
+        /// Текст самой "подсказки" должен формировать BoardManager (там есть логика правды/лжи и выбор целей).
+        /// </summary>
+        public bool TryConsumeAbility(out string introDialogue)
         {
-            if (!CanUseAbility) return null;
+            introDialogue = null;
+            if (!CanUseAbility) return false;
+
             abilityUsed = true;
-
-            // что скажет карта: интро + statementText (из уровня)
-            string intro = VisibleDefinition.abilityIntroDialogue;
-            string clue = entry.statementText;
-
-            if (!string.IsNullOrWhiteSpace(intro))
-                return $"{intro}\n{clue}";
-            return clue;
+            introDialogue = VisibleDefinition.abilityIntroDialogue;
+            return true;
         }
 
         public void Kill()
@@ -135,6 +142,13 @@ namespace Guardian.Game
         {
             killSelectable = value;
 
+            if (killSelectable)
+            {
+                // режимы не должны пересекаться
+                abilitySelectable = false;
+                abilityTargetSelected = false;
+            }
+
             if (!killSelectable)
             {
                 SetHighlight(false, 0f);
@@ -146,17 +160,49 @@ namespace Guardian.Game
             }
         }
 
+        public void SetAbilitySelectable(bool value)
+        {
+            abilitySelectable = value;
+            if (!abilitySelectable)
+                abilityTargetSelected = false;
+
+            if (!abilitySelectable)
+            {
+                // если не в kill-mode тоже убираем подсветку
+                if (!killSelectable)
+                {
+                    SetHighlight(false, 0f);
+                    transform.localScale = baseScale;
+                }
+            }
+            else
+            {
+                SetHighlight(true, highlightAlpha);
+            }
+        }
+
+        public void SetAbilityTargetSelected(bool selected)
+        {
+            if (!abilitySelectable) return;
+            abilityTargetSelected = selected;
+            SetHighlight(true, abilityTargetSelected ? hoverAlpha : highlightAlpha);
+        }
+
         public void OnPointerEnter(PointerEventData eventData)
         {
-            if (!killSelectable) return;
+            if (!killSelectable && !abilitySelectable) return;
             SetHighlight(true, hoverAlpha);
             transform.localScale = baseScale * hoverScale;
         }
 
         public void OnPointerExit(PointerEventData eventData)
         {
-            if (!killSelectable) return;
-            SetHighlight(true, highlightAlpha);
+            if (!killSelectable && !abilitySelectable) return;
+
+            float baseAlpha = highlightAlpha;
+            if (abilitySelectable && abilityTargetSelected) baseAlpha = hoverAlpha;
+
+            SetHighlight(true, baseAlpha);
             transform.localScale = baseScale;
         }
 

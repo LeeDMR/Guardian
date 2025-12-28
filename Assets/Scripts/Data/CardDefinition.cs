@@ -18,6 +18,7 @@ namespace Guardian.Data
         public Sprite portrait;
 
         [Header("UI / Ability")]
+        public bool hasAbility = true;
         [TextArea(2, 6)] public string description;            // описание роли/способности для правой панели
         public string abilityButtonText = "Использовать способность";
 
