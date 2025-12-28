@@ -30,6 +30,7 @@ namespace Guardian.Data
         public CardDefinition trueDefinition;
 
         [TextArea(2, 4)]
+        [Tooltip("Текст, который карта скажет при использовании способности")]
         public string statementText;
 
         public bool isDemon;

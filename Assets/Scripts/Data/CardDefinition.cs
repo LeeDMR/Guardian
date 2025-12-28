@@ -2,26 +2,27 @@ using UnityEngine;
 
 namespace Guardian.Data
 {
-    [CreateAssetMenu(
-        fileName = "CardDefinition",
-        menuName = "Guardian/Card Definition",
-        order = 0)]
+
+    [CreateAssetMenu(fileName = "CardDefinition", menuName = "Guardian/Card Definition", order = 0)]
     public class CardDefinition : ScriptableObject
     {
         [Header("Identity")]
-        public string id;              // Внутренний ID (например "card_detective_1")
-        public string displayName;     // Имя на карте, типа "Сыщик"
+        public string id;
+        public string displayName;
 
         [Header("Type & Role")]
-        public CardType cardType;      // Demon / Villager
-        public RoleType roleType;      // Сыщик, Священник и т.п.
+        public CardType cardType;
+        public RoleType roleType;
 
         [Header("Visual")]
-        public Sprite portrait;        // Портрет жителя/демона (для прототипа можно оставить пустым)
+        public Sprite portrait;
 
-        [TextArea(2, 4)]
-        [Header("Statement template (опционально)")]
-        public string statementTemplate;
+        [Header("UI / Ability")]
+        [TextArea(2, 6)] public string description;            // описание роли/способности для правой панели
+        public string abilityButtonText = "Использовать способность";
 
+        [Header("Dialogue")]
+        [TextArea(1, 3)] public string revealDialogue;         // что говорит при раскрытии
+        [TextArea(1, 3)] public string abilityIntroDialogue;   // что говорит перед подсказкой (опционально)
     }
 }
