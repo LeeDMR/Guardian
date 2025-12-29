@@ -94,6 +94,38 @@ namespace Guardian.Game
             UpdateTopUI();
         }
 
+        /// <summary>
+        /// (UI Toolkit main menu) Start / restart the board with a new level definition.
+        /// Safe to call multiple times at runtime.
+        /// </summary>
+        public void StartLevel(LevelDefinition newLevel)
+        {
+            if (newLevel == null) return;
+
+            levelDefinition = newLevel;
+
+            // Reset modes/UI
+            mode = InteractionMode.Normal;
+            abilityRequest = null;
+            selected = null;
+            if (detailsPanel) detailsPanel.Hide();
+
+            // Clear existing UGUI CardView instances (they are used only as data/state holders in UITK mode).
+            if (cardsParent != null)
+            {
+                for (int i = cardsParent.childCount - 1; i >= 0; i--)
+                    Destroy(cardsParent.GetChild(i).gameObject);
+            }
+
+            // Rebuild
+            InitLevel();
+            UpdateTopUI();
+
+            // Hide any leftover UGUI bubble (UITK bubble is managed inside the bridge)
+            if (bubble != null)
+                bubble.gameObject.SetActive(false);
+        }
+
         private void InitLevel()
         {
             lives = levelDefinition.playerLives;
@@ -165,8 +197,8 @@ namespace Guardian.Game
 
         private void EnterKillMode()
         {
-			// Hide details panel: in kill mode we don't want selection UI to interfere.
-			DeselectCard();
+            // Hide details panel: in kill mode we don't want selection UI to interfere.
+            DeselectCard();
 
             mode = InteractionMode.Kill;
 
@@ -318,7 +350,9 @@ namespace Guardian.Game
             string abilityText = BuildAbilityText(source, kind, null);
             if (string.IsNullOrWhiteSpace(abilityText)) return;
 
-            string msg = ComposeAbilityMessage(intro, abilityText);
+            // ѕоказываем только результат способности.
+            // »нтро-реплика часто воспринимаетс€ как "текст при раскрытии" и в итоге мешает.
+            string msg = string.IsNullOrWhiteSpace(abilityText) ? intro : abilityText;
             ShowBubble(source, msg);
         }
 
@@ -407,7 +441,8 @@ namespace Guardian.Game
             }
 
             string abilityText = BuildAbilityText(req.source, req.kind, req.targets);
-            string msg = ComposeAbilityMessage(intro, abilityText);
+            // ѕоказываем только результат способности (без реплики раскрыти€/интро).
+            string msg = string.IsNullOrWhiteSpace(abilityText) ? intro : abilityText;
             ShowBubble(req.source, msg);
 
             CancelAbilityTargeting();

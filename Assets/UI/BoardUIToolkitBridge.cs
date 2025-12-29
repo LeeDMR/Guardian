@@ -1,5 +1,8 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using Guardian.Data;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
@@ -35,6 +38,12 @@ namespace Guardian.Game
         private VisualElement cardsGrid;
         private VisualElement boardArea;
         private readonly List<VisualElement> cardRoots = new();
+        // Cached info about what coordinate convention RuntimePanelUtils.ScreenToPanel expects.
+        // Some Unity/UITK setups treat screen Y as top-left (0 at top), while UGUI uses bottom-left.
+        // We detect it once per panel and convert accordingly when positioning UGUI SpeechBubble.
+        private IPanel originPanel;
+        private bool originComputed;
+        private bool screenToPanelIsBottomLeft;
         private CardView[] cards;
 
         private Label livesValue;
@@ -50,19 +59,82 @@ namespace Guardian.Game
         private CardView current;
         private VisualElement root;
 
+        // --- Main Menu (UI Toolkit) ---
+        private VisualElement gameHud;
+        private VisualElement menuOverlay;
+        private VisualElement levelSelectOverlay;
+        private VisualElement settingsOverlay;
+
+        private Button playButton;
+        private Button settingsButton;
+        private Button exitButton;
+        private Button levelsBackButton;
+        private Button settingsBackButton;
+        private VisualElement levelsList;
+        private Slider musicSlider;
+        private Slider sfxSlider;
+
+        private bool initialized;
+
         private void Awake()
         {
+            // UIDocument clones the VisualTreeAsset in OnEnable().
             if (!doc) doc = GetComponent<UIDocument>();
             if (!board) board = FindAnyObjectByType<BoardManager>();
+        }
+
+        private void OnEnable()
+        {
+            // Avoid NullReference in Awake: visual tree may not be cloned yet.
+            StartCoroutine(InitWhenReady());
+        }
+
+        private IEnumerator InitWhenReady()
+        {
+            // Wait a few frames for UITK to finish cloning the tree (especially in Editor).
+            for (int i = 0; i < 10; i++)
+            {
+                if (TryInitUI())
+                    yield break;
+
+                yield return null;
+            }
+
+            Debug.LogError("[BoardUIToolkitBridge] UI tree did not initialize. Check UIDocument VisualTreeAsset and UXML element names.");
+        }
+
+        private bool TryInitUI()
+        {
+            if (initialized) return true;
+            if (!doc) return false;
 
             root = doc.rootVisualElement;
+            if (root == null || root.childCount == 0) return false;
+
+            // Main menu elements
+            gameHud = root.Q<VisualElement>("GameHUD");
+            menuOverlay = root.Q<VisualElement>("MenuOverlay");
+            levelSelectOverlay = root.Q<VisualElement>("LevelSelectOverlay");
+            settingsOverlay = root.Q<VisualElement>("SettingsOverlay");
+
+            // If the UXML hasn't been cloned into the panel yet, retry next frame.
+            if (gameHud == null && menuOverlay == null)
+                return false;
+
+            playButton = root.Q<Button>("PlayButton");
+            settingsButton = root.Q<Button>("SettingsButton");
+            exitButton = root.Q<Button>("ExitButton");
+            levelsBackButton = root.Q<Button>("LevelsBackButton");
+            settingsBackButton = root.Q<Button>("SettingsBackButton");
+            levelsList = root.Q<VisualElement>("LevelsList");
+            musicSlider = root.Q<Slider>("MusicSlider");
+            sfxSlider = root.Q<Slider>("SfxSlider");
+
             cardsGrid = root.Q<VisualElement>("CardsGrid");
             boardArea = root.Q<VisualElement>("BoardArea");
 
             if (boardArea != null)
                 boardArea.RegisterCallback<GeometryChangedEvent>(_ => RefitCardsGrid());
-
-
 
             livesValue = root.Q<Label>("LivesValue");
             demonsValue = root.Q<Label>("DemonsValue");
@@ -73,17 +145,175 @@ namespace Guardian.Game
             cardTitle = root.Q<Label>("CardTitle");
             cardDesc = root.Q<Label>("CardDesc");
             abilityButton = root.Q<Button>("AbilityButton");
-            detailsPanel = root.Q<VisualElement>("DetailsPanel");
 
-            // UI events
-            killButton.clicked += () => board.OnKillButtonPressed();
-            abilityButton.clicked += () =>
+            // UI events (guard against missing elements)
+            if (killButton != null && board != null)
             {
-                if (current != null) board.UseAbility(current);
-                RefreshSelected(); // обновим кнопку/тексты после использования
-            };
+                killButton.clicked -= OnKillClicked;
+                killButton.clicked += OnKillClicked;
+            }
+
+            if (abilityButton != null && board != null)
+            {
+                abilityButton.clicked -= OnAbilityClicked;
+                abilityButton.clicked += OnAbilityClicked;
+            }
 
             SetSelected(null);
+
+            // Wire menu events last (so doc/root exists and board ref is valid)
+            HookMenuEvents();
+            ShowMainMenu();
+
+            initialized = true;
+            return true;
+        }
+
+        private void OnKillClicked()
+        {
+            board?.OnKillButtonPressed();
+        }
+
+        private void OnAbilityClicked()
+        {
+            if (current != null) board?.UseAbility(current);
+            RefreshSelected();
+        }
+
+        private void HookMenuEvents()
+        {
+            if (playButton != null)
+                playButton.clicked += ShowLevelSelect;
+
+            if (settingsButton != null)
+                settingsButton.clicked += ShowSettings;
+
+            if (exitButton != null)
+                exitButton.clicked += QuitGame;
+
+            if (levelsBackButton != null)
+                levelsBackButton.clicked += ShowMainMenu;
+
+            if (settingsBackButton != null)
+                settingsBackButton.clicked += ShowMainMenu;
+
+            // Load saved settings
+            if (musicSlider != null)
+                musicSlider.value = PlayerPrefs.GetFloat("Settings.Music", (float)musicSlider.value);
+            if (sfxSlider != null)
+                sfxSlider.value = PlayerPrefs.GetFloat("Settings.SFX", (float)sfxSlider.value);
+
+            if (musicSlider != null)
+                musicSlider.RegisterValueChangedCallback(evt =>
+                {
+                    PlayerPrefs.SetFloat("Settings.Music", evt.newValue);
+                    PlayerPrefs.Save();
+                });
+
+            if (sfxSlider != null)
+                sfxSlider.RegisterValueChangedCallback(evt =>
+                {
+                    PlayerPrefs.SetFloat("Settings.SFX", evt.newValue);
+                    PlayerPrefs.Save();
+                });
+
+            BuildLevelsList();
+        }
+
+        private void ShowMainMenu()
+        {
+            // Hide gameplay HUD while in menu
+            if (gameHud != null)
+                gameHud.style.display = DisplayStyle.None;
+
+            if (menuOverlay != null)
+                menuOverlay.RemoveFromClassList("hidden");
+
+            if (levelSelectOverlay != null)
+                levelSelectOverlay.AddToClassList("hidden");
+
+            if (settingsOverlay != null)
+                settingsOverlay.AddToClassList("hidden");
+        }
+
+        private void ShowLevelSelect()
+        {
+            if (menuOverlay != null)
+                menuOverlay.AddToClassList("hidden");
+            if (settingsOverlay != null)
+                settingsOverlay.AddToClassList("hidden");
+            if (levelSelectOverlay != null)
+                levelSelectOverlay.RemoveFromClassList("hidden");
+        }
+
+        private void ShowSettings()
+        {
+            if (menuOverlay != null)
+                menuOverlay.AddToClassList("hidden");
+            if (levelSelectOverlay != null)
+                levelSelectOverlay.AddToClassList("hidden");
+            if (settingsOverlay != null)
+                settingsOverlay.RemoveFromClassList("hidden");
+        }
+
+        private void StartSelectedLevel(LevelDefinition level)
+        {
+            if (level == null || board == null) return;
+
+            board.StartLevel(level);
+
+            // Show gameplay UI
+            if (gameHud != null)
+                gameHud.style.display = DisplayStyle.Flex;
+
+            if (menuOverlay != null)
+                menuOverlay.AddToClassList("hidden");
+            if (levelSelectOverlay != null)
+                levelSelectOverlay.AddToClassList("hidden");
+            if (settingsOverlay != null)
+                settingsOverlay.AddToClassList("hidden");
+        }
+
+        private void QuitGame()
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        }
+
+        private void BuildLevelsList()
+        {
+            if (levelsList == null) return;
+
+            levelsList.Clear();
+
+            // Levels are loaded from Resources/Levels.
+            var levels = Resources.LoadAll<LevelDefinition>("Levels")
+                .Where(l => l != null)
+                .OrderBy(l => l.name)
+                .ToArray();
+
+            if (levels.Length == 0)
+            {
+                var lbl = new Label("Нет уровней в Resources/Levels");
+                lbl.style.color = new StyleColor(new Color(1f, 1f, 1f, 0.7f));
+                levelsList.Add(lbl);
+                return;
+            }
+
+            foreach (var lvl in levels)
+            {
+                var btn = new Button(() => StartSelectedLevel(lvl))
+                {
+                    text = string.IsNullOrWhiteSpace(lvl.levelId) ? lvl.name : lvl.levelId
+                };
+                btn.AddToClassList("btn");
+                btn.AddToClassList("menu-btn");
+                btn.AddToClassList("primary");
+                levelsList.Add(btn);
+            }
         }
 
         public void BuildCards(CardView[] cardViews)
@@ -332,8 +562,41 @@ namespace Guardian.Game
             if (board == null || card == null) return;
             if (string.IsNullOrWhiteSpace(message)) return;
 
-            if (TryGetCardBubbleAnchor(card.Index, out var screenPoint, out var placeLeft))
+            // IMPORTANT:
+            // CardView.Index is a gameplay index and can diverge from the visual order.
+            // The safest anchor is to resolve the visual element index from our `cards` array.
+            int visualIndex = ResolveVisualIndex(card);
+            if (visualIndex < 0) return;
+
+            if (TryGetCardBubbleAnchor(visualIndex, out var screenPoint, out var placeLeft))
+            {
                 board.ShowBubbleAtScreenPoint(screenPoint, placeLeft, message);
+                return;
+            }
+
+            // Layout for UI Toolkit elements can update at the end of the frame. If we asked for
+            // worldBound too early (rare but possible), we retry on the next UI tick.
+            if (root != null)
+            {
+                root.schedule.Execute(() =>
+                {
+                    if (TryGetCardBubbleAnchor(visualIndex, out var sp, out var left))
+                        board.ShowBubbleAtScreenPoint(sp, left, message);
+                }).StartingIn(0);
+            }
+        }
+
+        private int ResolveVisualIndex(CardView card)
+        {
+            if (cards != null)
+            {
+                for (int i = 0; i < cards.Length; i++)
+                    if (ReferenceEquals(cards[i], card))
+                        return i;
+            }
+
+            // Fallback for edge cases
+            return card.Index;
         }
 
         bool TryGetCardBubbleAnchor(int index, out Vector2 screenPoint, out bool placeLeft)
@@ -350,35 +613,131 @@ namespace Guardian.Game
             if (panel == null) return false;
 
             var wb = ve.worldBound; // panel coords
+            // If geometry isn't resolved yet, worldBound can be 0-sized. We'll retry next tick.
+            if (wb.width < 1f || wb.height < 1f) return false;
             var topRightPanel = new Vector2(wb.xMax, wb.yMin);
             var topLeftPanel = new Vector2(wb.xMin, wb.yMin);
 
-            // Convert panel -> screen without PanelToScreenPoint
-            var topRightScreen = PanelToScreenApprox(panel, topRightPanel);
-            var topLeftScreen = PanelToScreenApprox(panel, topLeftPanel);
+            // Convert panel -> screen (for UITK). Then convert to UGUI screen coords if needed.
+            // We use PanelToScreenSafe (numerical inversion of ScreenToPanel) to handle GameView scaling.
+            Vector2 topRightScreenForPanel = PanelToScreenSafe(panel, topRightPanel);
+            Vector2 topLeftScreenForPanel = PanelToScreenSafe(panel, topLeftPanel);
+            Vector2 topRightUGUIScreen = ToUGUIScreen(panel, topRightScreenForPanel);
+            Vector2 topLeftUGUIScreen = ToUGUIScreen(panel, topLeftScreenForPanel);
 
-            placeLeft = topRightScreen.x > Screen.width * 0.65f;
-            screenPoint = placeLeft ? topLeftScreen : topRightScreen;
+            placeLeft = topRightUGUIScreen.x > Screen.width * 0.65f;
+            screenPoint = placeLeft ? topLeftUGUIScreen : topRightUGUIScreen;
 
             return true;
         }
 
-        static Vector2 PanelToScreenApprox(IPanel panel, Vector2 panelPos)
+        private static Vector2 PanelToScreenViaRoot(IPanel panel, Rect rootWorldBound, Vector2 panelPos)
         {
-            // Candidate A: assume panel coords == screen coords
-            Vector2 s1 = panelPos;
+            float rw = Mathf.Max(1f, rootWorldBound.width);
+            float rh = Mathf.Max(1f, rootWorldBound.height);
 
-            // Candidate B: flipped Y
-            Vector2 s2 = new Vector2(panelPos.x, Screen.height - panelPos.y);
+            float nx = (panelPos.x - rootWorldBound.xMin) / rw;
+            float ny = (panelPos.y - rootWorldBound.yMin) / rh;
 
-            // Pick the candidate that maps back closest to the original panelPos
-            Vector2 p1 = RuntimePanelUtils.ScreenToPanel(panel, s1);
-            Vector2 p2 = RuntimePanelUtils.ScreenToPanel(panel, s2);
+            // Two candidates for Y origin (some panels treat Y up, others Y down).
+            Vector2 s1 = new Vector2(nx * Screen.width, ny * Screen.height);
+            Vector2 s2 = new Vector2(nx * Screen.width, (1f - ny) * Screen.height);
 
-            float d1 = (p1 - panelPos).sqrMagnitude;
-            float d2 = (p2 - panelPos).sqrMagnitude;
+            Vector2 b1 = RuntimePanelUtils.ScreenToPanel(panel, s1);
+            Vector2 b2 = RuntimePanelUtils.ScreenToPanel(panel, s2);
 
-            return d1 <= d2 ? s1 : s2;
+            return (b1 - panelPos).sqrMagnitude <= (b2 - panelPos).sqrMagnitude ? s1 : s2;
+        }
+
+        private void EnsureOriginComputed(IPanel panel)
+        {
+            if (panel == null) return;
+            if (originComputed && originPanel == panel) return;
+
+            originPanel = panel;
+            // If ScreenToPanel treats (0,0) as bottom-left, then screenY=Screen.height corresponds to top-left,
+            // which should map to a SMALLER panel Y (because UITK panel Y grows downward).
+            Vector2 p0 = RuntimePanelUtils.ScreenToPanel(panel, Vector2.zero);
+            Vector2 pTop = RuntimePanelUtils.ScreenToPanel(panel, new Vector2(0f, Screen.height));
+            screenToPanelIsBottomLeft = pTop.y < p0.y;
+            originComputed = true;
+        }
+
+        private Vector2 ToUGUIScreen(IPanel panel, Vector2 screenPointInScreenToPanelConvention)
+        {
+            EnsureOriginComputed(panel);
+            if (screenToPanelIsBottomLeft) return screenPointInScreenToPanelConvention;
+            // ScreenToPanel expects top-left screen coords; convert to UGUI (bottom-left).
+            return new Vector2(screenPointInScreenToPanelConvention.x, Screen.height - screenPointInScreenToPanelConvention.y);
+        }
+
+        static Vector2 PanelToScreenSafe(IPanel panel, Vector2 panelPos)
+        {
+            // Unity versions differ: some have RuntimePanelUtils.PanelToScreenPoint,
+            // others don't. We use reflection to stay compatible.
+            // 1) Try using built-in helper when present (Unity version dependent).
+            // We search by name and compatible signature to avoid brittle reflection.
+            const BindingFlags flags = BindingFlags.Public | BindingFlags.Static;
+            var methods = typeof(RuntimePanelUtils).GetMethods(flags);
+            for (int i = 0; i < methods.Length; i++)
+            {
+                var m = methods[i];
+                if (m.Name != "PanelToScreenPoint") continue;
+
+                var ps = m.GetParameters();
+                if (ps.Length != 2) continue;
+                if (ps[1].ParameterType != typeof(Vector2)) continue;
+                if (!ps[0].ParameterType.IsInstanceOfType(panel) && ps[0].ParameterType != typeof(IPanel))
+                    continue;
+
+                try
+                {
+                    object result = ps[0].ParameterType == typeof(IPanel)
+                        ? m.Invoke(null, new object[] { panel, panelPos })
+                        : m.Invoke(null, new object[] { panel, panelPos });
+
+                    if (result is Vector2 v2)
+                    {
+                        // Different Unity versions / panels can disagree on Y origin.
+                        // Pick the candidate that maps back closest to the requested panelPos.
+                        Vector2 v2Flipped = new Vector2(v2.x, Screen.height - v2.y);
+                        Vector2 back1 = RuntimePanelUtils.ScreenToPanel(panel, v2);
+                        Vector2 back2 = RuntimePanelUtils.ScreenToPanel(panel, v2Flipped);
+                        return (back1 - panelPos).sqrMagnitude <= (back2 - panelPos).sqrMagnitude ? v2 : v2Flipped;
+                    }
+                }
+                catch
+                {
+                    // ignore and fallback
+                }
+            }
+
+            // 2) Robust fallback: numerically invert ScreenToPanel mapping.
+            // This handles GameView scaling, DPI scaling, and different panel implementations.
+            // We assume an affine mapping without rotation (true for runtime panels).
+            Vector2 s00 = Vector2.zero;
+            Vector2 s10 = new Vector2(Screen.width, 0f);
+            Vector2 s01 = new Vector2(0f, Screen.height);
+
+            Vector2 p00 = RuntimePanelUtils.ScreenToPanel(panel, s00);
+            Vector2 p10 = RuntimePanelUtils.ScreenToPanel(panel, s10);
+            Vector2 p01 = RuntimePanelUtils.ScreenToPanel(panel, s01);
+
+            float sx = (p10.x - p00.x) / Mathf.Max(1f, Screen.width);
+            float sy = (p01.y - p00.y) / Mathf.Max(1f, Screen.height);
+
+            if (Mathf.Abs(sx) < 1e-5f) sx = 1f;
+            if (Mathf.Abs(sy) < 1e-5f) sy = 1f;
+
+            float screenX = (panelPos.x - p00.x) / sx;
+            float screenY = (panelPos.y - p00.y) / sy;
+
+            // As with the reflection path, verify Y origin by round-tripping.
+            Vector2 c1 = new Vector2(screenX, screenY);
+            Vector2 c2 = new Vector2(c1.x, Screen.height - c1.y);
+            Vector2 b1 = RuntimePanelUtils.ScreenToPanel(panel, c1);
+            Vector2 b2 = RuntimePanelUtils.ScreenToPanel(panel, c2);
+            return (b1 - panelPos).sqrMagnitude <= (b2 - panelPos).sqrMagnitude ? c1 : c2;
         }
 
     }

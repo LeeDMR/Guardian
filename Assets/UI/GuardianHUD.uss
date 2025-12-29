@@ -9,14 +9,21 @@
     left: 24px;
     right: 24px;
     top: 18px;
+    /*
+      Keep the bar compact.
+      Stats are rendered on a single row now (label left, value right),
+      so we don't need the extra height.
+    */
     height: 72px;
 
     flex-direction: row;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
 
-    padding-left: 14px;
-    padding-right: 14px;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 8px;
+    padding-bottom: 8px;
 
     background-color: rgba(35, 38, 44, 0.90);
     border-radius: 16px;
@@ -28,28 +35,41 @@
     border-right-color: rgba(255,255,255,0.08);
     border-top-color: rgba(255,255,255,0.08);
     border-bottom-color: rgba(255,255,255,0.08);
+
+    /* Safety: never let inner chips render outside the bar */
+    overflow: hidden;
 }
 
 .stat {
-    padding-left: 14px;
-    padding-right: 14px;
-    padding-top: 10px;
-    padding-bottom: 10px;
+    /* label (left) + value (right) on one line */
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 8px;
+    padding-bottom: 8px;
 
     background-color: rgba(255,255,255,0.06);
-    border-radius: 14px;
-    min-width: 140px;
+    border-radius: 16px;
+    min-width: 170px;
 }
 
 .stat-label {
     color: rgba(255,255,255,0.70);
-    font-size: 12px;
+    font-size: 14px;
+    -unity-text-align: middle-left;
+    flex-grow: 1;
 }
 
 .stat-value {
     color: white;
-    font-size: 22px;
+    /* bigger, but still fits because it's on the same row */
+    font-size: 32px;
     unity-font-style: bold;
+    -unity-text-align: middle-right;
 }
 
 .spacer {
@@ -60,6 +80,7 @@
     position: absolute;
     left: 24px;
     right: 24px;
+    /* below the topbar (18 + 72 + ~14 gap) */
     top: 104px;
     bottom: 24px;
 
@@ -122,10 +143,31 @@
 }
 
 .btn {
-    height: 44px;
+    height: 48px;
     border-radius: 14px;
+    padding-left: 18px;
+    padding-right: 18px;
     background-color: rgba(255,255,255,0.10);
     color: white;
+}
+
+/* Button text sizing (UI Toolkit stores the text in an inner label) */
+.btn .unity-button__text,
+.btn .unity-text-element {
+    font-size: 15px;
+    unity-font-style: bold;
+}
+
+/* Top bar CTA should be a bit bigger */
+.topbar .btn {
+    height: 52px;
+    border-radius: 16px;
+    min-width: 110px;
+}
+
+.topbar .btn .unity-button__text,
+.topbar .btn .unity-text-element {
+    font-size: 18px;
 }
 
 .btn:hover {
@@ -210,3 +252,127 @@
     white-space: normal;
     font-size: 13px;
 }
+
+/* =====================
+   Main Menu / Modals
+   ===================== */
+
+.game-hud {
+    width: 100%;
+    height: 100%;
+}
+
+.hidden {
+    display: none;
+}
+
+.overlay {
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    justify-content: center;
+    align-items: center;
+}
+
+.overlay-scrim {
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    background-color: rgba(10, 11, 13, 0.72);
+}
+
+.menu-panel,
+.modal-panel {
+    z-index: 50;
+    width: 460px;
+    padding: 26px;
+    gap: 14px;
+    flex-direction: column;
+
+    background-color: rgba(35, 38, 44, 0.92);
+    border-radius: 22px;
+
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgba(255,255,255,0.10);
+    border-right-color: rgba(255,255,255,0.10);
+    border-top-color: rgba(255,255,255,0.10);
+    border-bottom-color: rgba(255,255,255,0.10);
+}
+
+.menu-title {
+    color: white;
+    font-size: 34px;
+    unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin-bottom: 2px;
+}
+
+.menu-subtitle {
+    color: rgba(255,255,255,0.65);
+    font-size: 14px;
+    -unity-text-align: middle-center;
+    margin-bottom: 10px;
+}
+
+.modal-title {
+    color: white;
+    font-size: 22px;
+    unity-font-style: bold;
+    -unity-text-align: middle-left;
+    margin-bottom: 6px;
+}
+
+.menu-btn {
+    height: 56px;
+    border-radius: 16px;
+}
+
+.menu-btn .unity-button__text,
+.menu-btn .unity-text-element {
+    font-size: 18px;
+    unity-font-style: bold;
+}
+
+.primary {
+    background-color: rgba(70, 140, 255, 0.92);
+}
+.primary:hover {
+    background-color: rgba(95, 165, 255, 0.96);
+}
+.primary:active {
+    background-color: rgba(55, 120, 230, 0.96);
+}
+
+.levels-list {
+    flex-direction: column;
+    gap: 10px;
+    max-height: 320px;
+    overflow: scroll;
+    padding-right: 4px;
+}
+
+.settings-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+.settings-label {
+    color: rgba(255,255,255,0.80);
+    font-size: 14px;
+}
+
+.settings-slider {
+    width: 220px;
+}
+
