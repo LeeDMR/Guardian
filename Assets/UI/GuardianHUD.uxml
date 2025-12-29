@@ -55,56 +55,116 @@
 
         <!-- Settings Modal -->
         <ui:VisualElement name="SettingsOverlay" class="overlay hidden">
-          <ui:VisualElement class="panel">
-            <ui:Label text="Настройки" class="title"/>
+          <ui:VisualElement class="modal settings-modal">
 
-            <ui:Label text="Аудио" class="section"/>
-            <ui:VisualElement class="row">
-              <ui:Label text="Master" class="row-label"/>
-              <ui:SliderInt name="MasterSlider" low-value="0" high-value="100" class="row-control"/>
-            </ui:VisualElement>
-            <ui:VisualElement class="row">
-              <ui:Label text="Music" class="row-label"/>
-              <ui:SliderInt name="MusicSlider" low-value="0" high-value="100" class="row-control"/>
-            </ui:VisualElement>
-            <ui:VisualElement class="row">
-              <ui:Label text="SFX" class="row-label"/>
-              <ui:SliderInt name="SfxSlider" low-value="0" high-value="100" class="row-control"/>
+            <!-- Header -->
+            <ui:VisualElement class="modal-header">
+              <ui:Label text="Настройки" class="modal-title"/>
+              <ui:Button name="SettingsCloseX" text="✕" class="icon-btn"/>
             </ui:VisualElement>
 
-            <ui:Label text="Графика" class="section"/>
-            <ui:VisualElement class="row">
-              <ui:Label text="Fullscreen" class="row-label"/>
-              <ui:Toggle name="FullscreenToggle" class="row-control"/>
-            </ui:VisualElement>
-            <ui:VisualElement class="row">
-              <ui:Label text="Resolution" class="row-label"/>
-              <ui:DropdownField name="ResolutionDropdown" class="row-control"/>
-            </ui:VisualElement>
-            <ui:VisualElement class="row">
-              <ui:Label text="Quality" class="row-label"/>
-              <ui:DropdownField name="QualityDropdown" class="row-control"/>
-            </ui:VisualElement>
-            <ui:VisualElement class="row">
-              <ui:Label text="VSync" class="row-label"/>
-              <ui:Toggle name="VSyncToggle" class="row-control"/>
-            </ui:VisualElement>
-            <ui:VisualElement class="row">
-              <ui:Label text="FPS" class="row-label"/>
-              <ui:DropdownField name="FpsDropdown" class="row-control"/>
+            <!-- Tabs -->
+            <ui:VisualElement class="tabs">
+              <ui:Button name="TabAudio" text="Аудио" class="tab is-active"/>
+              <ui:Button name="TabGraphics" text="Графика" class="tab"/>
+              <ui:Button name="TabUI" text="Интерфейс" class="tab"/>
             </ui:VisualElement>
 
-            <ui:Label text="Интерфейс" class="section"/>
-            <ui:VisualElement class="row">
-              <ui:Label text="UI Scale" class="row-label"/>
-              <ui:SliderInt name="UIScaleSlider" low-value="80" high-value="130" class="row-control"/>
+            <!-- Body -->
+            <ui:ScrollView class="modal-body">
+              <!-- AUDIO -->
+              <ui:VisualElement name="Settings_Audio" class="tab-page">
+                <ui:VisualElement class="setting-row">
+                  <ui:Label text="Master" class="setting-label"/>
+                  <ui:SliderInt name="MasterSlider" low-value="0" high-value="100" class="setting-control"/>
+                  <ui:Label name="MasterValue" text="100%" class="setting-value"/>
+                </ui:VisualElement>
+
+                <ui:VisualElement class="setting-row">
+                  <ui:Label text="Music" class="setting-label"/>
+                  <ui:SliderInt name="MusicSlider" low-value="0" high-value="100" class="setting-control"/>
+                  <ui:Label name="MusicValue" text="100%" class="setting-value"/>
+                </ui:VisualElement>
+
+                <ui:VisualElement class="setting-row">
+                  <ui:Label text="SFX" class="setting-label"/>
+                  <ui:SliderInt name="SfxSlider" low-value="0" high-value="100" class="setting-control"/>
+                  <ui:Label name="SfxValue" text="100%" class="setting-value"/>
+                </ui:VisualElement>
+              </ui:VisualElement>
+
+              <!-- GRAPHICS -->
+              <ui:VisualElement name="Settings_Graphics" class="tab-page hidden">
+                <ui:VisualElement class="setting-row">
+                  <ui:Label text="Fullscreen" class="setting-label"/>
+                  <ui:Toggle name="FullscreenToggle" class="toggle"/>
+                </ui:VisualElement>
+
+                <ui:VisualElement class="setting-row">
+                  <ui:Label text="Resolution" class="setting-label"/>
+                  <ui:DropdownField name="ResolutionDropdown" class="dropdown"/>
+                </ui:VisualElement>
+
+                <ui:VisualElement class="setting-row">
+                  <ui:Label text="Quality" class="setting-label"/>
+                  <ui:DropdownField name="QualityDropdown" class="dropdown"/>
+                </ui:VisualElement>
+
+                <ui:VisualElement class="setting-row">
+                  <ui:Label text="VSync" class="setting-label"/>
+                  <ui:Toggle name="VSyncToggle" class="toggle"/>
+                </ui:VisualElement>
+
+                <ui:VisualElement class="setting-row">
+                  <ui:Label text="FPS" class="setting-label"/>
+                  <ui:DropdownField name="FpsDropdown" class="dropdown"/>
+                </ui:VisualElement>
+              </ui:VisualElement>
+
+              <!-- UI -->
+              <ui:VisualElement name="Settings_UI" class="tab-page hidden">
+                <ui:VisualElement class="setting-row">
+                  <ui:Label text="UI Scale" class="setting-label"/>
+                  <ui:SliderInt name="UIScaleSlider" low-value="80" high-value="130" class="setting-control"/>
+                  <ui:Label name="UIScaleValue" text="100%" class="setting-value"/>
+                </ui:VisualElement>
+              </ui:VisualElement>
+            </ui:ScrollView>
+
+            <!-- Footer -->
+            <ui:VisualElement class="modal-footer">
+              <ui:Button name="SettingsBackButton" text="Назад" class="btn secondary"/>
+              <ui:Button name="SettingsResetButton" text="Сбросить" class="btn danger"/>
             </ui:VisualElement>
 
-            <ui:VisualElement class="buttons">
-              <ui:Button name="SettingsBackButton" text="Назад"/>
-              <ui:Button name="SettingsResetButton" text="Сбросить"/>
+          </ui:VisualElement>
+        </ui:VisualElement>
+
+                <!-- Victory -->
+        <ui:VisualElement name="VictoryOverlay" class="overlay hidden">
+          <ui:VisualElement class="modal win-modal">
+            <ui:Label text="ПОБЕДА" class="result-title"/>
+            <ui:Label name="VictorySubtitle" text="Вы изгнали всех демонов!" class="result-subtitle"/>
+
+            <ui:VisualElement class="result-buttons">
+              <ui:Button name="VictoryRestartButton" text="Заново" class="btn"/>
+              <ui:Button name="VictoryMenuButton" text="В меню" class="btn secondary"/>
             </ui:VisualElement>
           </ui:VisualElement>
         </ui:VisualElement>
+
+        <!-- Defeat -->
+        <ui:VisualElement name="DefeatOverlay" class="overlay hidden">
+          <ui:VisualElement class="modal lose-modal">
+            <ui:Label text="ПОРАЖЕНИЕ" class="result-title"/>
+            <ui:Label name="DefeatSubtitle" text="Жизни закончились." class="result-subtitle"/>
+
+            <ui:VisualElement class="result-buttons">
+              <ui:Button name="DefeatRestartButton" text="Заново" class="btn"/>
+              <ui:Button name="DefeatMenuButton" text="В меню" class="btn secondary"/>
+            </ui:VisualElement>
+          </ui:VisualElement>
+        </ui:VisualElement>
+
     </ui:VisualElement>
 </ui:UXML>

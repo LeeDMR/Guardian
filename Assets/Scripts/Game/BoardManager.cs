@@ -94,10 +94,6 @@ namespace Guardian.Game
             UpdateTopUI();
         }
 
-        /// <summary>
-        /// (UI Toolkit main menu) Start / restart the board with a new level definition.
-        /// Safe to call multiple times at runtime.
-        /// </summary>
         public void StartLevel(LevelDefinition newLevel)
         {
             if (newLevel == null) return;
@@ -140,9 +136,7 @@ namespace Guardian.Game
                 cv.Init(i, entry, this);
                 cardViews[i] = cv;
 
-                // When UI Toolkit cards are used, we keep CardView objects only as data/state holders.
-                // Disable their GameObjects so they don't intercept pointer events (UGUI) and don't
-                // visually overlap with UI Toolkit.
+
                 if (uiBridge != null)
                     cv.gameObject.SetActive(false);
             }
@@ -152,13 +146,10 @@ namespace Guardian.Game
 
         private void Update()
         {
-            // Мы работаем через New Input System.
+            
             if (Pointer.current == null) return;
             if (!Pointer.current.press.wasPressedThisFrame) return;
 
-            // Важно: клики по UI Toolkit не должны сбрасывать выбор/режимы в BoardManager.
-            // Иначе при клике по кнопке "Use ability" сначала сработает DeselectCard(),
-            // и до обработчика UITK дойдёт уже current == null.
             if (uiBridge != null && uiBridge.IsPointerOverAnyUI(Pointer.current.position.ReadValue()))
                 return;
 
