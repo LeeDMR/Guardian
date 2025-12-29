@@ -42,6 +42,8 @@ namespace Guardian.Game
         private int lives;
         private int demonsRemaining;
 
+        private bool gameOver;
+
         public CardView SelectedCard => selected;
         public bool IsKillMode => mode == InteractionMode.Kill;
         public bool IsAbilityTargeting => mode == InteractionMode.AbilityTargeting;
@@ -94,6 +96,10 @@ namespace Guardian.Game
             UpdateTopUI();
         }
 
+        /// <summary>
+        /// (UI Toolkit main menu) Start / restart the board with a new level definition.
+        /// Safe to call multiple times at runtime.
+        /// </summary>
         public void StartLevel(LevelDefinition newLevel)
         {
             if (newLevel == null) return;
@@ -124,6 +130,9 @@ namespace Guardian.Game
 
         private void InitLevel()
         {
+            gameOver = false;
+            uiBridge?.HideOutcomeOverlays();
+
             lives = levelDefinition.playerLives;
             demonsRemaining = levelDefinition.demonsToKill;
 
@@ -136,7 +145,9 @@ namespace Guardian.Game
                 cv.Init(i, entry, this);
                 cardViews[i] = cv;
 
-
+                // When UI Toolkit cards are used, we keep CardView objects only as data/state holders.
+                // Disable their GameObjects so they don't intercept pointer events (UGUI) and don't
+                // visually overlap with UI Toolkit.
                 if (uiBridge != null)
                     cv.gameObject.SetActive(false);
             }
@@ -146,10 +157,15 @@ namespace Guardian.Game
 
         private void Update()
         {
-            
+            if (gameOver) return;
+
+            // Мы работаем через New Input System.
             if (Pointer.current == null) return;
             if (!Pointer.current.press.wasPressedThisFrame) return;
 
+            // Важно: клики по UI Toolkit не должны сбрасывать выбор/режимы в BoardManager.
+            // Иначе при клике по кнопке "Use ability" сначала сработает DeselectCard(),
+            // и до обработчика UITK дойдёт уже current == null.
             if (uiBridge != null && uiBridge.IsPointerOverAnyUI(Pointer.current.position.ReadValue()))
                 return;
 
@@ -178,6 +194,8 @@ namespace Guardian.Game
 
         public void OnKillButtonPressed()
         {
+            if (gameOver) return;
+
             // если был выбор целей способности — отменяем его
             if (mode == InteractionMode.AbilityTargeting)
                 CancelAbilityTargeting();
@@ -217,6 +235,8 @@ namespace Guardian.Game
 
         public void OnCardClicked(CardView card)
         {
+            if (gameOver) return;
+
             if (card == null) return;
 
             // 1) KILL MODE: убиваем и закрытые, и раскрытые карты
@@ -281,6 +301,8 @@ namespace Guardian.Game
         /// </summary>
         public void UseAbility(CardView source)
         {
+            if (gameOver) return;
+
             if (source == null) return;
             if (!source.IsOpen) return;
             if (source != selected) return; // способность только у выбранной карты
@@ -550,6 +572,54 @@ namespace Guardian.Game
             if (livesText) livesText.text = $"{lives}";
             if (demonsText) demonsText.text = $"{demonsRemaining}";
             uiBridge?.SetStats(lives, demonsRemaining);
+            CheckEndConditions();
+        }
+
+
+        private void CheckEndConditions()
+        {
+            if (gameOver) return;
+
+            // Victory: all demons are gone
+            if (demonsRemaining <= 0)
+            {
+                TriggerVictory();
+                return;
+            }
+
+            // Defeat: no lives left
+            if (lives <= 0)
+            {
+                TriggerDefeat();
+            }
+        }
+
+        private void TriggerVictory()
+        {
+            gameOver = true;
+
+            // Clean up current interaction state
+            if (mode == InteractionMode.Kill) CancelKillMode();
+            if (mode == InteractionMode.AbilityTargeting) CancelAbilityTargeting();
+            DeselectCard();
+
+            // Hide any leftover UGUI bubble
+            if (bubble != null) bubble.gameObject.SetActive(false);
+
+            uiBridge?.ShowVictory();
+        }
+
+        private void TriggerDefeat()
+        {
+            gameOver = true;
+
+            if (mode == InteractionMode.Kill) CancelKillMode();
+            if (mode == InteractionMode.AbilityTargeting) CancelAbilityTargeting();
+            DeselectCard();
+
+            if (bubble != null) bubble.gameObject.SetActive(false);
+
+            uiBridge?.ShowDefeat();
         }
 
         private void ShowBubble(CardView card, string message)

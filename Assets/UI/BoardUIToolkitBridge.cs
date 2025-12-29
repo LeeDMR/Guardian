@@ -67,6 +67,14 @@ namespace Guardian.Game
         private VisualElement levelSelectOverlay;
         private VisualElement settingsOverlay;
 
+        private VisualElement winOverlay;
+        private VisualElement loseOverlay;
+
+        private Button winRestartButton;
+        private Button winMenuButton;
+        private Button loseRestartButton;
+        private Button loseMenuButton;
+
         private Button playButton;
         private Button settingsButton;
         private Button exitButton;
@@ -75,14 +83,6 @@ namespace Guardian.Game
         private VisualElement levelsList;
         private SliderInt musicSlider;
         private SliderInt sfxSlider;
-
-        private VisualElement victoryOverlay;
-        private VisualElement defeatOverlay;
-
-        private Button victoryRestartButton;
-        private Button victoryMenuButton;
-        private Button defeatRestartButton;
-        private Button defeatMenuButton;
 
         private bool initialized;
 
@@ -142,6 +142,8 @@ namespace Guardian.Game
             menuOverlay = root.Q<VisualElement>("MenuOverlay");
             levelSelectOverlay = root.Q<VisualElement>("LevelSelectOverlay");
             settingsOverlay = root.Q<VisualElement>("SettingsOverlay");
+            winOverlay = root.Q<VisualElement>("WinOverlay");
+            loseOverlay = root.Q<VisualElement>("LoseOverlay");
 
             // If the UXML hasn't been cloned into the panel yet, retry next frame.
             if (gameHud == null && menuOverlay == null)
@@ -152,6 +154,10 @@ namespace Guardian.Game
             exitButton = root.Q<Button>("ExitButton");
             levelsBackButton = root.Q<Button>("LevelsBackButton");
             settingsBackButton = root.Q<Button>("SettingsBackButton");
+            winRestartButton = root.Q<Button>("WinRestartButton");
+            winMenuButton = root.Q<Button>("WinMenuButton");
+            loseRestartButton = root.Q<Button>("LoseRestartButton");
+            loseMenuButton = root.Q<Button>("LoseMenuButton");
             levelsList = root.Q<VisualElement>("LevelsList");
             musicSlider = root.Q<SliderInt>("MusicSlider");
             sfxSlider = root.Q<SliderInt>("SfxSlider");
@@ -171,14 +177,6 @@ namespace Guardian.Game
             cardTitle = root.Q<Label>("CardTitle");
             cardDesc = root.Q<Label>("CardDesc");
             abilityButton = root.Q<Button>("AbilityButton");
-
-            victoryOverlay = root.Q<VisualElement>("VictoryOverlay");
-            defeatOverlay = root.Q<VisualElement>("DefeatOverlay");
-
-            victoryRestartButton = root.Q<Button>("VictoryRestartButton");
-            victoryMenuButton = root.Q<Button>("VictoryMenuButton");
-            defeatRestartButton = root.Q<Button>("DefeatRestartButton");
-            defeatMenuButton = root.Q<Button>("DefeatMenuButton");
 
             // UI events (guard against missing elements)
             if (killButton != null && board != null)
@@ -203,7 +201,6 @@ namespace Guardian.Game
             return true;
         }
 
-
         private void OnKillClicked()
         {
             board?.OnKillButtonPressed();
@@ -214,35 +211,6 @@ namespace Guardian.Game
             if (current != null) board?.UseAbility(current);
             RefreshSelected();
         }
-
-        public void ShowVictory(string subtitle = null)
-        {
-            HideResultOverlays();
-            if (victoryOverlay != null) victoryOverlay.RemoveFromClassList("hidden");
-            if (!string.IsNullOrEmpty(subtitle))
-            {
-                var lbl = root?.Q<Label>("VictorySubtitle");
-                if (lbl != null) lbl.text = subtitle;
-            }
-        }
-
-        public void ShowDefeat(string subtitle = null)
-        {
-            HideResultOverlays();
-            if (defeatOverlay != null) defeatOverlay.RemoveFromClassList("hidden");
-            if (!string.IsNullOrEmpty(subtitle))
-            {
-                var lbl = root?.Q<Label>("DefeatSubtitle");
-                if (lbl != null) lbl.text = subtitle;
-            }
-        }
-
-        public void HideResultOverlays()
-        {
-            if (victoryOverlay != null) victoryOverlay.AddToClassList("hidden");
-            if (defeatOverlay != null) defeatOverlay.AddToClassList("hidden");
-        }
-
 
         private void HookMenuEvents()
         {
@@ -261,41 +229,28 @@ namespace Guardian.Game
             if (settingsBackButton != null)
                 settingsBackButton.clicked += ShowMainMenu;
 
-            // Load saved settings
-            if (musicSlider != null)
-                musicSlider.value = (int)PlayerPrefs.GetFloat("Settings.Music", (float)musicSlider.value);
-            if (sfxSlider != null)
-                sfxSlider.value = (int)PlayerPrefs.GetFloat("Settings.SFX", (float)sfxSlider.value);
+            // Win/Lose overlays
+            if (winRestartButton != null)
+                winRestartButton.clicked += RestartCurrentLevel;
+            if (loseRestartButton != null)
+                loseRestartButton.clicked += RestartCurrentLevel;
 
-            if (musicSlider != null)
-                musicSlider.RegisterValueChangedCallback(evt =>
-                {
-                    PlayerPrefs.SetFloat("Settings.Music", evt.newValue);
-                    PlayerPrefs.Save();
-                });
+            if (winMenuButton != null)
+                winMenuButton.clicked += () => { HideOutcomeOverlays(); ShowMainMenu(); };
+            if (loseMenuButton != null)
+                loseMenuButton.clicked += () => { HideOutcomeOverlays(); ShowMainMenu(); };
 
-            if (sfxSlider != null)
-                sfxSlider.RegisterValueChangedCallback(evt =>
-                {
-                    PlayerPrefs.SetFloat("Settings.SFX", evt.newValue);
-                    PlayerPrefs.Save();
-                });
-
-
-            if (victoryMenuButton != null) victoryMenuButton.clicked += () => { HideResultOverlays(); ShowMainMenu(); };
-            if (defeatMenuButton != null) defeatMenuButton.clicked += () => { HideResultOverlays(); ShowMainMenu(); };
-
+            // Settings UI: populate from PlayerPrefs and wire callbacks
             PopulateSettingsUI(root);
             WireSettingsCallbacks(root);
             ApplyUiScaleToRoot(root);
-
-            WireSettingsTabs(root);
 
             BuildLevelsList();
         }
 
         private void ShowMainMenu()
         {
+            HideOutcomeOverlays();
             // Hide gameplay HUD while in menu
             if (gameHud != null)
                 gameHud.style.display = DisplayStyle.None;
@@ -312,6 +267,7 @@ namespace Guardian.Game
 
         private void ShowLevelSelect()
         {
+            HideOutcomeOverlays();
             if (menuOverlay != null)
                 menuOverlay.AddToClassList("hidden");
             if (settingsOverlay != null)
@@ -322,6 +278,7 @@ namespace Guardian.Game
 
         private void ShowSettings()
         {
+            HideOutcomeOverlays();
             if (menuOverlay != null)
                 menuOverlay.AddToClassList("hidden");
             if (levelSelectOverlay != null)
@@ -332,6 +289,7 @@ namespace Guardian.Game
 
         private void StartSelectedLevel(LevelDefinition level)
         {
+            HideOutcomeOverlays();
             if (level == null || board == null) return;
 
             board.StartLevel(level);
@@ -348,6 +306,47 @@ namespace Guardian.Game
                 settingsOverlay.AddToClassList("hidden");
         }
 
+
+
+        private void RestartCurrentLevel()
+        {
+            if (board == null) return;
+            HideOutcomeOverlays();
+            StartSelectedLevel(board.levelDefinition);
+        }
+
+        public void ShowVictory()
+        {
+            // Keep gameplay HUD visible and show a modal overlay over it
+            if (gameHud != null)
+                gameHud.style.display = DisplayStyle.Flex;
+
+            if (menuOverlay != null) menuOverlay.AddToClassList("hidden");
+            if (levelSelectOverlay != null) levelSelectOverlay.AddToClassList("hidden");
+            if (settingsOverlay != null) settingsOverlay.AddToClassList("hidden");
+
+            if (loseOverlay != null) loseOverlay.AddToClassList("hidden");
+            if (winOverlay != null) winOverlay.RemoveFromClassList("hidden");
+        }
+
+        public void ShowDefeat()
+        {
+            if (gameHud != null)
+                gameHud.style.display = DisplayStyle.Flex;
+
+            if (menuOverlay != null) menuOverlay.AddToClassList("hidden");
+            if (levelSelectOverlay != null) levelSelectOverlay.AddToClassList("hidden");
+            if (settingsOverlay != null) settingsOverlay.AddToClassList("hidden");
+
+            if (winOverlay != null) winOverlay.AddToClassList("hidden");
+            if (loseOverlay != null) loseOverlay.RemoveFromClassList("hidden");
+        }
+
+        public void HideOutcomeOverlays()
+        {
+            if (winOverlay != null) winOverlay.AddToClassList("hidden");
+            if (loseOverlay != null) loseOverlay.AddToClassList("hidden");
+        }
         private void QuitGame()
         {
 #if UNITY_EDITOR
@@ -814,11 +813,6 @@ namespace Guardian.Game
             return (b1 - panelPos).sqrMagnitude <= (b2 - panelPos).sqrMagnitude ? c1 : c2;
         }
 
-        private static void SetPct(VisualElement root, string labelName, int value)
-        {
-            var lbl = root.Q<Label>(labelName);
-            if (lbl != null) lbl.text = $"{value}%";
-        }
         private void PopulateSettingsUI(VisualElement root)
         {
             // sliders
@@ -841,11 +835,6 @@ namespace Guardian.Game
             if (music != null) music.value = Mathf.RoundToInt(SettingsService.Music * 100f);
             if (sfx != null) sfx.value = Mathf.RoundToInt(SettingsService.Sfx * 100f);
             if (uiScale != null) uiScale.value = Mathf.RoundToInt(SettingsService.UIScale * 100f);
-
-            if (master != null) SetPct(root, "MasterValue", master.value);
-            if (music != null) SetPct(root, "MusicValue", music.value);
-            if (sfx != null) SetPct(root, "SfxValue", sfx.value);
-            if (uiScale != null) SetPct(root, "UIScaleValue", uiScale.value);
 
             if (fullscreen != null) fullscreen.value = SettingsService.Fullscreen;
             if (vsync != null) vsync.value = SettingsService.VSync;
@@ -884,73 +873,19 @@ namespace Guardian.Game
             }
         }
 
-
-        private void WireSettingsTabs(VisualElement root)
-        {
-            var tabAudio = root.Q<Button>("TabAudio");
-            var tabGraphics = root.Q<Button>("TabGraphics");
-            var tabUI = root.Q<Button>("TabUI");
-
-            var pageAudio = root.Q<VisualElement>("Settings_Audio");
-            var pageGraphics = root.Q<VisualElement>("Settings_Graphics");
-            var pageUI = root.Q<VisualElement>("Settings_UI");
-
-            // если чего-то нет в UXML Ч просто выходим без ошибок
-            if (tabAudio == null || tabGraphics == null || tabUI == null) return;
-            if (pageAudio == null || pageGraphics == null || pageUI == null) return;
-
-            void ShowTab(string tab)
-            {
-                pageAudio.EnableInClassList("hidden", tab != "audio");
-                pageGraphics.EnableInClassList("hidden", tab != "graphics");
-                pageUI.EnableInClassList("hidden", tab != "ui");
-
-                tabAudio.EnableInClassList("is-active", tab == "audio");
-                tabGraphics.EnableInClassList("is-active", tab == "graphics");
-                tabUI.EnableInClassList("is-active", tab == "ui");
-            }
-
-            // ¬ажно: чтобы не подписыватьс€ по 10 раз Ч сначала отцепим (безопасно)
-            tabAudio.clicked -= () => ShowTab("audio");
-            tabGraphics.clicked -= () => ShowTab("graphics");
-            tabUI.clicked -= () => ShowTab("ui");
-
-            tabAudio.clicked += () => ShowTab("audio");
-            tabGraphics.clicked += () => ShowTab("graphics");
-            tabUI.clicked += () => ShowTab("ui");
-
-            // по умолчанию
-            ShowTab("audio");
-        }
         private void WireSettingsCallbacks(VisualElement root)
         {
             var master = root.Q<SliderInt>("MasterSlider");
             if (master != null)
-                master.RegisterValueChangedCallback(e =>
-                {
-                    SetPct(root, "MasterValue", e.newValue);
-                    SettingsService.SetMaster(e.newValue / 100f);
-                    SettingsService.ApplyAudio();
-                    SettingsService.Save();
-                });
+                master.RegisterValueChangedCallback(e => { SettingsService.SetMaster(e.newValue / 100f); SettingsService.ApplyAudio(); SettingsService.Save(); });
 
             var music = root.Q<SliderInt>("MusicSlider");
             if (music != null)
-                music.RegisterValueChangedCallback(e =>
-                {
-                    SetPct(root, "MusicValue", e.newValue);
-                    SettingsService.SetMusic(e.newValue / 100f);
-                    SettingsService.Save();
-                });
+                music.RegisterValueChangedCallback(e => { SettingsService.SetMusic(e.newValue / 100f); SettingsService.Save(); });
 
             var sfx = root.Q<SliderInt>("SfxSlider");
             if (sfx != null)
-                sfx.RegisterValueChangedCallback(e =>
-                {
-                    SetPct(root, "SfxValue", e.newValue);
-                    SettingsService.SetSfx(e.newValue / 100f);
-                    SettingsService.Save();
-                });
+                sfx.RegisterValueChangedCallback(e => { SettingsService.SetSfx(e.newValue / 100f); SettingsService.Save(); });
 
             var fullscreen = root.Q<Toggle>("FullscreenToggle");
             if (fullscreen != null)
