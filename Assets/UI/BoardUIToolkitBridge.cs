@@ -456,10 +456,39 @@ namespace Guardian.Game
             title.text = card.IsOpen ? card.VisibleDefinition.displayName : "???";
 
             var portrait = btn.Q<VisualElement>("Portrait");
-            if (card.IsOpen && card.VisibleDefinition.portrait != null)
-                portrait.style.backgroundImage = new StyleBackground(card.VisibleDefinition.portrait.texture);
-            else
-                portrait.style.backgroundImage = StyleKeyword.None;
+
+            Sprite spriteToShow = null;
+
+            if (card.IsOpen)
+            {
+                // ≈сли демон мЄртв Ч показываем истинный портрет демона
+                if (card.IsDead && card.entry.isDemon)
+                {
+                    var truth = card.TruthDefinition;
+                    spriteToShow = (truth != null)
+                        ? (truth.portraitTrue != null ? truth.portraitTrue : truth.portrait)
+                        : null;
+                }
+                else
+                {
+                    // »наче (обычное раскрытие) Ч показываем маску (visible)
+                    var vis = card.VisibleDefinition;
+                    spriteToShow = vis != null ? vis.portrait : null;
+                }
+            }
+
+            if (portrait != null)
+            {
+                if (spriteToShow != null)
+                {
+                    portrait.style.backgroundImage = new StyleBackground(spriteToShow);
+                    portrait.style.unityBackgroundScaleMode = ScaleMode.ScaleAndCrop; // красиво заполн€ет
+                }
+                else
+                {
+                    portrait.style.backgroundImage = StyleKeyword.None;
+                }
+            }
         }
 
         public void RefreshAllCards()

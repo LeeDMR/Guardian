@@ -298,7 +298,7 @@ namespace Guardian.Game
                     card.Kill();
                     uiBridge?.RefreshAllCards();
 
-                    if (wasDemon) demonsRemaining--;
+                    if (wasDemon) demonsRemaining-- ;
                     else lives--;
 
                     UpdateTopUI();
