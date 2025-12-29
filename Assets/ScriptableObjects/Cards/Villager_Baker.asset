@@ -13,12 +13,19 @@ MonoBehaviour:
   m_Name: Villager_Baker
   m_EditorClassIdentifier: Assembly-CSharp::Guardian.Data.CardDefinition
   id: villager_baker
-  displayName: Пекарь
+  displayName: "\u041F\u0435\u043A\u0430\u0440\u044C"
   cardType: 0
   roleType: 0
-  portrait: {fileID: 0}
+  portrait: {fileID: 21300000, guid: 083037b2338af484d90505faa7e5affd, type: 3}
+  portraitTrue: {fileID: 0}
   hasAbility: 0
-  description: Простой житель. Вкусный хлеб не спасёт от демонов, но может помочь сохранить спокойствие.
-  abilityButtonText: "Использовать способнособность"
-  revealDialogue: Тёплый хлеб и холодные истины... что будем делать?
+  description: "\u041F\u0440\u043E\u0441\u0442\u043E\u0439 \u0436\u0438\u0442\u0435\u043B\u044C.
+    \u0412\u043A\u0443\u0441\u043D\u044B\u0439 \u0445\u043B\u0435\u0431 \u043D\u0435
+    \u0441\u043F\u0430\u0441\u0451\u0442 \u043E\u0442 \u0434\u0435\u043C\u043E\u043D\u043E\u0432,
+    \u043D\u043E \u043C\u043E\u0436\u0435\u0442 \u043F\u043E\u043C\u043E\u0447\u044C
+    \u0441\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C \u0441\u043F\u043E\u043A\u043E\u0439\u0441\u0442\u0432\u0438\u0435."
+  abilityButtonText: "\u041D\u0435\u0442"
+  revealDialogue: "\u0422\u0451\u043F\u043B\u044B\u0439 \u0445\u043B\u0435\u0431
+    \u0438 \u0445\u043E\u043B\u043E\u0434\u043D\u044B\u0435 \u0438\u0441\u0442\u0438\u043D\u044B...
+    \u0447\u0442\u043E \u0431\u0443\u0434\u0435\u043C \u0434\u0435\u043B\u0430\u0442\u044C?"
   abilityIntroDialogue: 

@@ -40,9 +40,7 @@ namespace Guardian.Game
         private VisualElement cardsGrid;
         private VisualElement boardArea;
         private readonly List<VisualElement> cardRoots = new();
-        // Cached info about what coordinate convention RuntimePanelUtils.ScreenToPanel expects.
-        // Some Unity/UITK setups treat screen Y as top-left (0 at top), while UGUI uses bottom-left.
-        // We detect it once per panel and convert accordingly when positioning UGUI SpeechBubble.
+
         private IPanel originPanel;
         private bool originComputed;
         private bool screenToPanelIsBottomLeft;
@@ -132,7 +130,6 @@ namespace Guardian.Game
                     vta.CloneTree(root);
             }
 
-            // всЄ ещЄ пусто? значит не назначен ни Source Asset, ни guardianHudAsset
             if (root.childCount == 0)
                 return false;
 
@@ -547,7 +544,7 @@ namespace Guardian.Game
 
             if (portrait != null)
             {
-                // Unity 6 умеет StyleBackground(Sprite)
+
                 portrait.style.backgroundImage = new StyleBackground(def.portrait);
                 portrait.style.unityBackgroundScaleMode = ScaleMode.ScaleToFit;
             }
@@ -615,11 +612,6 @@ namespace Guardian.Game
 
         public bool IsPointerOverDetailsPanel(Vector2 screenPos)
             => ContainsScreenPoint(detailsPanel, screenPos);
-
-        /// <summary>
-        /// True if the pointer is over our UI Toolkit HUD (top bar or details panel).
-        /// We keep it explicit to avoid "catching" clicks on fullscreen containers (Root/BoardArea).
-        /// </summary>
         public bool IsPointerOverAnyUI(Vector2 screenPos)
         {
             if (root == null || root.panel == null) return false;
@@ -684,8 +676,6 @@ namespace Guardian.Game
                 return;
             }
 
-            // Layout for UI Toolkit elements can update at the end of the frame. If we asked for
-            // worldBound too early (rare but possible), we retry on the next UI tick.
             if (root != null)
             {
                 root.schedule.Execute(() =>
@@ -728,8 +718,6 @@ namespace Guardian.Game
             var topRightPanel = new Vector2(wb.xMax, wb.yMin);
             var topLeftPanel = new Vector2(wb.xMin, wb.yMin);
 
-            // Convert panel -> screen (for UITK). Then convert to UGUI screen coords if needed.
-            // We use PanelToScreenSafe (numerical inversion of ScreenToPanel) to handle GameView scaling.
             Vector2 topRightScreenForPanel = PanelToScreenSafe(panel, topRightPanel);
             Vector2 topLeftScreenForPanel = PanelToScreenSafe(panel, topLeftPanel);
             Vector2 topRightUGUIScreen = ToUGUIScreen(panel, topRightScreenForPanel);
@@ -765,8 +753,7 @@ namespace Guardian.Game
             if (originComputed && originPanel == panel) return;
 
             originPanel = panel;
-            // If ScreenToPanel treats (0,0) as bottom-left, then screenY=Screen.height corresponds to top-left,
-            // which should map to a SMALLER panel Y (because UITK panel Y grows downward).
+
             Vector2 p0 = RuntimePanelUtils.ScreenToPanel(panel, Vector2.zero);
             Vector2 pTop = RuntimePanelUtils.ScreenToPanel(panel, new Vector2(0f, Screen.height));
             screenToPanelIsBottomLeft = pTop.y < p0.y;
@@ -783,10 +770,7 @@ namespace Guardian.Game
 
         static Vector2 PanelToScreenSafe(IPanel panel, Vector2 panelPos)
         {
-            // Unity versions differ: some have RuntimePanelUtils.PanelToScreenPoint,
-            // others don't. We use reflection to stay compatible.
-            // 1) Try using built-in helper when present (Unity version dependent).
-            // We search by name and compatible signature to avoid brittle reflection.
+
             const BindingFlags flags = BindingFlags.Public | BindingFlags.Static;
             var methods = typeof(RuntimePanelUtils).GetMethods(flags);
             for (int i = 0; i < methods.Length; i++)
@@ -808,8 +792,7 @@ namespace Guardian.Game
 
                     if (result is Vector2 v2)
                     {
-                        // Different Unity versions / panels can disagree on Y origin.
-                        // Pick the candidate that maps back closest to the requested panelPos.
+
                         Vector2 v2Flipped = new Vector2(v2.x, Screen.height - v2.y);
                         Vector2 back1 = RuntimePanelUtils.ScreenToPanel(panel, v2);
                         Vector2 back2 = RuntimePanelUtils.ScreenToPanel(panel, v2Flipped);
@@ -818,13 +801,10 @@ namespace Guardian.Game
                 }
                 catch
                 {
-                    // ignore and fallback
+
                 }
             }
 
-            // 2) Robust fallback: numerically invert ScreenToPanel mapping.
-            // This handles GameView scaling, DPI scaling, and different panel implementations.
-            // We assume an affine mapping without rotation (true for runtime panels).
             Vector2 s00 = Vector2.zero;
             Vector2 s10 = new Vector2(Screen.width, 0f);
             Vector2 s01 = new Vector2(0f, Screen.height);
@@ -930,7 +910,6 @@ namespace Guardian.Game
             var pageGraphics = root.Q<VisualElement>("Settings_Graphics");
             var pageUI = root.Q<VisualElement>("Settings_UI");
 
-            // если чего-то нет в UXML Ч просто выходим без ошибок
             if (tabAudio == null || tabGraphics == null || tabUI == null) return;
             if (pageAudio == null || pageGraphics == null || pageUI == null) return;
 
@@ -945,7 +924,7 @@ namespace Guardian.Game
                 tabUI.EnableInClassList("is-active", tab == "ui");
             }
 
-            // ¬ажно: чтобы не подписыватьс€ по 10 раз Ч сначала отцепим (безопасно)
+
             tabAudio.clicked -= () => ShowTab("audio");
             tabGraphics.clicked -= () => ShowTab("graphics");
             tabUI.clicked -= () => ShowTab("ui");
@@ -1037,7 +1016,7 @@ namespace Guardian.Game
 
         private void ApplyUiScaleToRoot(VisualElement root)
         {
-            // ¬ажно: scale примен€етс€ к rootVisualElement (или к отдельному контейнеру UI)
+
             float s = Guardian.UI.SettingsService.UIScale;
             root.style.scale = new Scale(new Vector3(s, s, 1f));
         }

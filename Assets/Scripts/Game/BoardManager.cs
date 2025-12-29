@@ -96,11 +96,6 @@ namespace Guardian.Game
             InitLevel();
             UpdateTopUI();
         }
-
-        /// <summary>
-        /// (UI Toolkit main menu) Start / restart the board with a new level definition.
-        /// Safe to call multiple times at runtime.
-        /// </summary>
         public void StartLevel(LevelDefinition newLevel)
         {
             if (newLevel == null) return;
@@ -146,9 +141,6 @@ namespace Guardian.Game
                 cv.Init(i, entry, this);
                 cardViews[i] = cv;
 
-                // When UI Toolkit cards are used, we keep CardView objects only as data/state holders.
-                // Disable their GameObjects so they don't intercept pointer events (UGUI) and don't
-                // visually overlap with UI Toolkit.
                 if (uiBridge != null)
                     cv.gameObject.SetActive(false);
             }
@@ -212,9 +204,6 @@ namespace Guardian.Game
             if (Pointer.current == null) return;
             if (!Pointer.current.press.wasPressedThisFrame) return;
 
-            // Важно: клики по UI Toolkit не должны сбрасывать выбор/режимы в BoardManager.
-            // Иначе при клике по кнопке "Use ability" сначала сработает DeselectCard(),
-            // и до обработчика UITK дойдёт уже current == null.
             if (uiBridge != null && uiBridge.IsPointerOverAnyUI(Pointer.current.position.ReadValue()))
                 return;
 
@@ -345,9 +334,6 @@ namespace Guardian.Game
             uiBridge?.RefreshAllCards();
         }
 
-        /// <summary>
-        /// Нажатие на кнопку "Использовать способность" (вызывается из CardDetailsPanel).
-        /// </summary>
         public void UseAbility(CardView source)
         {
             if (gameOver) return;
@@ -412,8 +398,7 @@ namespace Guardian.Game
             string abilityText = BuildAbilityText(source, kind, null);
             if (string.IsNullOrWhiteSpace(abilityText)) return;
 
-            // Показываем только результат способности.
-            // Интро-реплика часто воспринимается как "текст при раскрытии" и в итоге мешает.
+
             string msg = string.IsNullOrWhiteSpace(abilityText) ? intro : abilityText;
             ShowBubble(source, msg);
         }

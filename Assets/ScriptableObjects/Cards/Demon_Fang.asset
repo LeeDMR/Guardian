@@ -13,12 +13,17 @@ MonoBehaviour:
   m_Name: Demon_Fang
   m_EditorClassIdentifier: Assembly-CSharp::Guardian.Data.CardDefinition
   id: demon_fang
-  displayName: Демон Клык
+  displayName: "\u0414\u0435\u043C\u043E\u043D \u041A\u043B\u044B\u043A"
   cardType: 1
   roleType: 0
   portrait: {fileID: 0}
+  portraitTrue: {fileID: 0}
   hasAbility: 0
-  description: Жёсткий и прямолинейный демон. Не любит игры, но умеет их выигрывать.
-  abilityButtonText: "Использовать способнособность"
-  revealDialogue: Хруст костей ближе, чем кажется...
+  description: "\u0416\u0451\u0441\u0442\u043A\u0438\u0439 \u0438 \u043F\u0440\u044F\u043C\u043E\u043B\u0438\u043D\u0435\u0439\u043D\u044B\u0439
+    \u0434\u0435\u043C\u043E\u043D. \u041D\u0435 \u043B\u044E\u0431\u0438\u0442 \u0438\u0433\u0440\u044B,
+    \u043D\u043E \u0443\u043C\u0435\u0435\u0442 \u0438\u0445 \u0432\u044B\u0438\u0433\u0440\u044B\u0432\u0430\u0442\u044C."
+  abilityButtonText: "\u0418\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u044C
+    \u0441\u043F\u043E\u0441\u043E\u0431\u043D\u043Ec\u0442\u044C"
+  revealDialogue: "\u0425\u0440\u0443\u0441\u0442 \u043A\u043E\u0441\u0442\u0435\u0439
+    \u0431\u043B\u0438\u0436\u0435, \u0447\u0435\u043C \u043A\u0430\u0436\u0435\u0442\u0441\u044F..."
   abilityIntroDialogue: 

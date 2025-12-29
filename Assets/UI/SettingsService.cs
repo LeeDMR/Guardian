@@ -52,8 +52,6 @@ namespace Guardian.UI
             ApplyUI();
         }
 
-        // Аудио: без AudioMixer используем AudioListener.volume как master.
-        // Music/SFX — обычно через AudioMixer, но если его нет, мы просто сохраняем значения (для будущего).
         public static void ApplyAudio()
         {
             AudioListener.volume = Master; // глобальный master
@@ -89,8 +87,6 @@ namespace Guardian.UI
             Screen.SetResolution(r.width, r.height, Screen.fullScreenMode, r.refreshRateRatio);
         }
 
-        // UI scale: применяем через scale корня UI Toolkit (в Bridge)
-        // Здесь оставим просто как хранилище, ApplyUI делается из Bridge.
         public static void ApplyUI()
         {
             // nothing here, will be applied in UI Toolkit bridge (rootVisualElement.scale)

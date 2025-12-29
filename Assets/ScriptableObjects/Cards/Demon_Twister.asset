@@ -13,12 +13,19 @@ MonoBehaviour:
   m_Name: Demon_Twister
   m_EditorClassIdentifier: Assembly-CSharp::Guardian.Data.CardDefinition
   id: demon_twister
-  displayName: Демон Плетельщик
+  displayName: "\u0414\u0435\u043C\u043E\u043D \u041F\u043B\u0435\u0442\u0435\u043B\u044C\u0449\u0438\u043A"
   cardType: 1
-  roleType: 0
-  portrait: {fileID: 0}
-  hasAbility: 0
-  description: Демон, который плетёт ложь как паутину. Часто прячется за чужими масками.
-  abilityButtonText: "Использовать способнособность"
-  revealDialogue: Истина — всего лишь ниточка. Я могу её оборвать.
+  roleType: 5
+  portrait: {fileID: 21300000, guid: 267ae30af8dc80f48b752e041a91a2d3, type: 3}
+  portraitTrue: {fileID: 21300000, guid: 267ae30af8dc80f48b752e041a91a2d3, type: 3}
+  hasAbility: 1
+  description: "\u0414\u0435\u043C\u043E\u043D, \u043A\u043E\u0442\u043E\u0440\u044B\u0439
+    \u043F\u043B\u0435\u0442\u0451\u0442 \u043B\u043E\u0436\u044C \u043A\u0430\u043A
+    \u043F\u0430\u0443\u0442\u0438\u043D\u0443. \u0427\u0430\u0441\u0442\u043E \u043F\u0440\u044F\u0447\u0435\u0442\u0441\u044F
+    \u0437\u0430 \u0447\u0443\u0436\u0438\u043C\u0438 \u043C\u0430\u0441\u043A\u0430\u043C\u0438."
+  abilityButtonText: "\u0418\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u044C
+    \u0441\u043F\u043E\u0441\u043E\u0431\u043D\u043Ec\u0442\u044C"
+  revealDialogue: "\u0418\u0441\u0442\u0438\u043D\u0430 \u2014 \u0432\u0441\u0435\u0433\u043E
+    \u043B\u0438\u0448\u044C \u043D\u0438\u0442\u043E\u0447\u043A\u0430. \u042F \u043C\u043E\u0433\u0443
+    \u0435\u0451 \u043E\u0431\u043E\u0440\u0432\u0430\u0442\u044C."
   abilityIntroDialogue: 
