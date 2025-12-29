@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
@@ -13,7 +12,28 @@ namespace Guardian.Game
         [SerializeField] private BoardManager board;
         [SerializeField] private VisualTreeAsset cardTileAsset;
 
+        [Header("Cards Grid Auto-Fit (UI Toolkit)")]
+        [Tooltip("Сколько рядов предпочитаем на доске. Например: 2 для 6 карт (получится 3x2).")]
+        [SerializeField, Min(1)] private int preferredRows = 2;
+
+        [Tooltip("Если > 0, то используем фиксированное число колонок (rows посчитаются автоматически).")]
+        [SerializeField, Min(0)] private int preferredColumns = 0;
+
+        [Tooltip("Padding в .cards-grid (должен совпадать с CardTile.uss).")]
+        [SerializeField] private float gridPadding = 28f;
+
+        [Tooltip("Gap между карточками в .cards-grid (должен совпадать с CardTile.uss).")]
+        [SerializeField] private float gridGap = 24f;
+
+        [Tooltip("Базовый размер карточки из USS. Мы масштабируем относительно него.")]
+        [SerializeField] private Vector2 referenceCardSize = new Vector2(240f, 340f);
+
+        [Tooltip("Разрешить увеличивать карточки больше базового размера (обычно лучше выключить).")]
+        [SerializeField] private bool allowUpscale = false;
+
+
         private VisualElement cardsGrid;
+        private VisualElement boardArea;
         private readonly List<VisualElement> cardRoots = new();
         private CardView[] cards;
 
@@ -37,6 +57,11 @@ namespace Guardian.Game
 
             root = doc.rootVisualElement;
             cardsGrid = root.Q<VisualElement>("CardsGrid");
+            boardArea = root.Q<VisualElement>("BoardArea");
+
+            if (boardArea != null)
+                boardArea.RegisterCallback<GeometryChangedEvent>(_ => RefitCardsGrid());
+
 
 
             livesValue = root.Q<Label>("LivesValue");
@@ -73,7 +98,16 @@ namespace Guardian.Game
             {
                 int idx = i;
                 var ve = cardTileAsset.Instantiate();
+
+                // В CardTile.uxml корневой элемент — Button, но мы оставляем поиск по имени для надёжности
                 var btn = ve.Q<Button>("CardTile");
+                if (btn == null)
+                {
+                    // Если структура UXML вдруг изменилась — всё равно добавим корневой VE, чтобы не сломать игру.
+                    cardsGrid.Add(ve);
+                    cardRoots.Add(ve);
+                    continue;
+                }
 
                 btn.clicked += () => board.OnCardClicked(cards[idx]);
 
@@ -82,6 +116,9 @@ namespace Guardian.Game
 
                 RefreshCard(idx);
             }
+
+            // После того как карточки добавлены и контейнер получил реальные размеры — подгоним их под доску
+            RefitCardsGrid();
         }
 
         public void RefreshCard(int i)
@@ -156,11 +193,8 @@ namespace Guardian.Game
             if (current == null || !current.IsOpen || current.IsDead)
             {
                 detailsPanel.RemoveFromClassList("shown");
-                detailsPanel.style.display = DisplayStyle.None;
                 return;
             }
-
-            detailsPanel.style.display = DisplayStyle.Flex;
             RefreshSelected();
             detailsPanel.AddToClassList("shown");
         }
@@ -186,6 +220,51 @@ namespace Guardian.Game
             {
                 abilityButton.SetEnabled(canUse);
                 abilityButton.text = canUse ? def.abilityButtonText : "Способность использована";
+            }
+        }
+
+
+        private void RefitCardsGrid()
+        {
+            if (boardArea == null || cardsGrid == null) return;
+            if (cardRoots.Count == 0) return;
+
+            int n = cardRoots.Count;
+
+            int cols;
+            int rows;
+
+            if (preferredColumns > 0)
+            {
+                cols = Mathf.Max(1, preferredColumns);
+                rows = Mathf.CeilToInt(n / (float)cols);
+            }
+            else
+            {
+                rows = Mathf.Max(1, preferredRows);
+                cols = Mathf.CeilToInt(n / (float)rows);
+            }
+
+            // Доступная область внутри BoardArea
+            float w = boardArea.contentRect.width - gridPadding * 2f - gridGap * (cols - 1);
+            float h = boardArea.contentRect.height - gridPadding * 2f - gridGap * (rows - 1);
+            if (w <= 0f || h <= 0f) return;
+
+            float cellW = w / cols;
+            float cellH = h / rows;
+
+            float scale = Mathf.Min(cellW / referenceCardSize.x, cellH / referenceCardSize.y);
+            if (!allowUpscale) scale = Mathf.Min(scale, 1f);
+            scale = Mathf.Max(0.1f, scale);
+
+            float cardW = referenceCardSize.x * scale;
+            float cardH = referenceCardSize.y * scale;
+
+            for (int i = 0; i < cardRoots.Count; i++)
+            {
+                var card = cardRoots[i];
+                card.style.width = cardW;
+                card.style.height = cardH;
             }
         }
 

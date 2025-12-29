@@ -85,6 +85,7 @@
 
 .details {
     width: 380px;
+    height: 100%;
     padding: 16px;
     gap: 12px;
 
@@ -149,15 +150,9 @@
     background-color: rgba(160,160,160,0.95);
 }
 
-/* ===== Overlay details panel (do not reflow cards) ===== */
+/* ===== Details panel show/hide without layout shift ===== */
 .details {
-    position: absolute;
-    right: 24px;
-    top: 76px;
-    bottom: 24px;
-    z-index: 10;
-
-    /* hidden by default (no layout shift, no clicks) */
+    /* hidden by default (no clicks; keeps its column size) */
     opacity: 0;
     visibility: hidden;
     pointer-events: none;

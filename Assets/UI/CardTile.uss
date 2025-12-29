@@ -1,4 +1,6 @@
 .cards-grid {
+  width: 100%;
+  height: 100%;
   flex-direction: row;
   flex-wrap: wrap;
   justify-content: center;
@@ -62,7 +64,15 @@
 .card.open .card-face-up { display: flex; flex-direction: column; gap: 12px; }
 
 .card-portrait {
-  height: 220px;
+  /*
+    Важно: портрет НЕ должен быть фиксированной высоты.
+    Иначе при автоподгонке размера карточек контент будет вылезать.
+  */
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-height: 110px;
+  max-height: 220px;
+
   border-radius: 14px;
   background-color: rgba(255,255,255,0.08);
 }
