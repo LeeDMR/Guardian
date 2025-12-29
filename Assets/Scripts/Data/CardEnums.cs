@@ -15,7 +15,8 @@ namespace Guardian.Data
         Detective,  
         Priest,      
         Elder,      
-        Liar        
+        Liar,
+        Twister
         // other
     }
 }

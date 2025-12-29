@@ -110,6 +110,15 @@ namespace Guardian.Game
             return true;
         }
 
+        public void ForceDisableAbility()
+        {
+            abilityUsed = true;
+
+            // на всякий случай сбросим подсветки/режимы способности
+            abilitySelectable = false;
+            abilityTargetSelected = false;
+        }
+
         public void Kill()
         {
             if (IsDead) return;

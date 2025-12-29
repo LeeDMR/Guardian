@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ca4625ab07ac48448d48816dfc54a71, type: 3}
+  m_Name: Villager_Baker
+  m_EditorClassIdentifier: Assembly-CSharp::Guardian.Data.CardDefinition
+  id: villager_baker
+  displayName: Пекарь
+  cardType: 0
+  roleType: 0
+  portrait: {fileID: 0}
+  hasAbility: 0
+  description: Простой житель. Вкусный хлеб не спасёт от демонов, но может помочь сохранить спокойствие.
+  abilityButtonText: "Использовать способнособность"
+  revealDialogue: Тёплый хлеб и холодные истины... что будем делать?
+  abilityIntroDialogue: 

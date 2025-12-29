@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ca4625ab07ac48448d48816dfc54a71, type: 3}
+  m_Name: Demon_Twister
+  m_EditorClassIdentifier: Assembly-CSharp::Guardian.Data.CardDefinition
+  id: demon_twister
+  displayName: Демон Плетельщик
+  cardType: 1
+  roleType: 0
+  portrait: {fileID: 0}
+  hasAbility: 0
+  description: Демон, который плетёт ложь как паутину. Часто прячется за чужими масками.
+  abilityButtonText: "Использовать способнособность"
+  revealDialogue: Истина — всего лишь ниточка. Я могу её оборвать.
+  abilityIntroDialogue: 

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Guardian.Data;
+using Guardian.UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -152,7 +153,55 @@ namespace Guardian.Game
                     cv.gameObject.SetActive(false);
             }
             uiBridge?.BuildCards(cardViews);
+            ApplyTwisterStartEffect();
             uiBridge?.RefreshAllCards();
+        }
+
+        private void ApplyTwisterStartEffect()
+        {
+            // 1) Проверяем, есть ли Twister среди демонов
+            bool hasTwister = false;
+
+            foreach (var cv in cardViews)
+            {
+                if (cv == null) continue;
+                if (!cv.entry.isDemon) continue;
+
+                // Twister может быть либо в TrueDefinition (если демон замаскирован),
+                // либо в VisibleDefinition (если ты так настроишь карточку)
+                var truth = cv.TruthDefinition;
+                var vis = cv.VisibleDefinition;
+
+                if ((truth != null && truth.roleType == RoleType.Twister) ||
+                    (vis != null && vis.roleType == RoleType.Twister))
+                {
+                    hasTwister = true;
+                    break;
+                }
+            }
+
+            if (!hasTwister) return;
+
+            // 2) Собираем кандидатов: только жители, только те, у кого есть ability
+            var candidates = new List<CardView>();
+
+            foreach (var cv in cardViews)
+            {
+                if (cv == null) continue;
+                if (cv.entry.isDemon) continue; // только жители
+
+                var def = cv.VisibleDefinition; // у жителей это и есть их роль
+                if (def != null && def.hasAbility)
+                    candidates.Add(cv);
+            }
+
+            if (candidates.Count == 0) return;
+
+            // 3) Выбираем случайного жителя и навсегда блокируем способность
+            var target = candidates[Random.Range(0, candidates.Count)];
+            target.ForceDisableAbility();
+
+            Debug.Log($"[Twister] Disabled ability on villager card #{target.Index + 1} ({target.VisibleDefinition.displayName})");
         }
 
         private void Update()
@@ -597,6 +646,14 @@ namespace Guardian.Game
         private void TriggerVictory()
         {
             gameOver = true;
+
+
+            // Persist level completion between sessions.
+            if (levelDefinition != null)
+            {
+                string id = string.IsNullOrWhiteSpace(levelDefinition.levelId) ? levelDefinition.name : levelDefinition.levelId;
+                LevelProgressService.MarkCompleted(id);
+            }
 
             // Clean up current interaction state
             if (mode == InteractionMode.Kill) CancelKillMode();

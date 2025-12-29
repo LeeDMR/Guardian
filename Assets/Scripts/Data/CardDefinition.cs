@@ -16,6 +16,7 @@ namespace Guardian.Data
 
         [Header("Visual")]
         public Sprite portrait;
+        public Sprite portraitTrue;
 
         [Header("UI / Ability")]
         public bool hasAbility = true;

@@ -245,12 +245,15 @@ namespace Guardian.Game
             WireSettingsCallbacks(root);
             ApplyUiScaleToRoot(root);
 
+            WireSettingsTabs(root);
+
             BuildLevelsList();
         }
 
         private void ShowMainMenu()
         {
             HideOutcomeOverlays();
+            BuildLevelsList();
             // Hide gameplay HUD while in menu
             if (gameHud != null)
                 gameHud.style.display = DisplayStyle.None;
@@ -268,6 +271,7 @@ namespace Guardian.Game
         private void ShowLevelSelect()
         {
             HideOutcomeOverlays();
+            BuildLevelsList();
             if (menuOverlay != null)
                 menuOverlay.AddToClassList("hidden");
             if (settingsOverlay != null)
@@ -378,13 +382,17 @@ namespace Guardian.Game
 
             foreach (var lvl in levels)
             {
+                string id = string.IsNullOrWhiteSpace(lvl.levelId) ? lvl.name : lvl.levelId;
+                bool completed = LevelProgressService.IsCompleted(id);
+
                 var btn = new Button(() => StartSelectedLevel(lvl))
                 {
-                    text = string.IsNullOrWhiteSpace(lvl.levelId) ? lvl.name : lvl.levelId
+                    text = completed ? $"{id} (пройден)" : id
                 };
                 btn.AddToClassList("btn");
                 btn.AddToClassList("menu-btn");
                 btn.AddToClassList("primary");
+                if (completed) btn.AddToClassList("completed");
                 levelsList.Add(btn);
             }
         }
@@ -813,6 +821,11 @@ namespace Guardian.Game
             return (b1 - panelPos).sqrMagnitude <= (b2 - panelPos).sqrMagnitude ? c1 : c2;
         }
 
+        private static void SetPct(VisualElement root, string labelName, int value)
+        {
+            var lbl = root.Q<Label>(labelName);
+            if (lbl != null) lbl.text = $"{value}%";
+        }
         private void PopulateSettingsUI(VisualElement root)
         {
             // sliders
@@ -835,6 +848,11 @@ namespace Guardian.Game
             if (music != null) music.value = Mathf.RoundToInt(SettingsService.Music * 100f);
             if (sfx != null) sfx.value = Mathf.RoundToInt(SettingsService.Sfx * 100f);
             if (uiScale != null) uiScale.value = Mathf.RoundToInt(SettingsService.UIScale * 100f);
+
+            if (master != null) SetPct(root, "MasterValue", master.value);
+            if (music != null) SetPct(root, "MusicValue", music.value);
+            if (sfx != null) SetPct(root, "SfxValue", sfx.value);
+            if (uiScale != null) SetPct(root, "UIScaleValue", uiScale.value);
 
             if (fullscreen != null) fullscreen.value = SettingsService.Fullscreen;
             if (vsync != null) vsync.value = SettingsService.VSync;
@@ -873,19 +891,73 @@ namespace Guardian.Game
             }
         }
 
+        private void WireSettingsTabs(VisualElement root)
+        {
+            var tabAudio = root.Q<Button>("TabAudio");
+            var tabGraphics = root.Q<Button>("TabGraphics");
+            var tabUI = root.Q<Button>("TabUI");
+
+            var pageAudio = root.Q<VisualElement>("Settings_Audio");
+            var pageGraphics = root.Q<VisualElement>("Settings_Graphics");
+            var pageUI = root.Q<VisualElement>("Settings_UI");
+
+            // если чего-то нет в UXML Ч просто выходим без ошибок
+            if (tabAudio == null || tabGraphics == null || tabUI == null) return;
+            if (pageAudio == null || pageGraphics == null || pageUI == null) return;
+
+            void ShowTab(string tab)
+            {
+                pageAudio.EnableInClassList("hidden", tab != "audio");
+                pageGraphics.EnableInClassList("hidden", tab != "graphics");
+                pageUI.EnableInClassList("hidden", tab != "ui");
+
+                tabAudio.EnableInClassList("is-active", tab == "audio");
+                tabGraphics.EnableInClassList("is-active", tab == "graphics");
+                tabUI.EnableInClassList("is-active", tab == "ui");
+            }
+
+            // ¬ажно: чтобы не подписыватьс€ по 10 раз Ч сначала отцепим (безопасно)
+            tabAudio.clicked -= () => ShowTab("audio");
+            tabGraphics.clicked -= () => ShowTab("graphics");
+            tabUI.clicked -= () => ShowTab("ui");
+
+            tabAudio.clicked += () => ShowTab("audio");
+            tabGraphics.clicked += () => ShowTab("graphics");
+            tabUI.clicked += () => ShowTab("ui");
+
+            // по умолчанию
+            ShowTab("audio");
+        }
+
         private void WireSettingsCallbacks(VisualElement root)
         {
             var master = root.Q<SliderInt>("MasterSlider");
             if (master != null)
-                master.RegisterValueChangedCallback(e => { SettingsService.SetMaster(e.newValue / 100f); SettingsService.ApplyAudio(); SettingsService.Save(); });
+                master.RegisterValueChangedCallback(e =>
+                {
+                    SetPct(root, "MasterValue", e.newValue);
+                    SettingsService.SetMaster(e.newValue / 100f);
+                    SettingsService.ApplyAudio();
+                    SettingsService.Save();
+                });
 
             var music = root.Q<SliderInt>("MusicSlider");
             if (music != null)
-                music.RegisterValueChangedCallback(e => { SettingsService.SetMusic(e.newValue / 100f); SettingsService.Save(); });
+                music.RegisterValueChangedCallback(e =>
+                {
+                    SetPct(root, "MusicValue", e.newValue);
+                    SettingsService.SetMusic(e.newValue / 100f);
+                    SettingsService.Save();
+                });
 
             var sfx = root.Q<SliderInt>("SfxSlider");
             if (sfx != null)
-                sfx.RegisterValueChangedCallback(e => { SettingsService.SetSfx(e.newValue / 100f); SettingsService.Save(); });
+                sfx.RegisterValueChangedCallback(e =>
+                {
+                    SetPct(root, "SfxValue", e.newValue);
+                    SettingsService.SetSfx(e.newValue / 100f);
+                    SettingsService.Save();
+                });
 
             var fullscreen = root.Q<Toggle>("FullscreenToggle");
             if (fullscreen != null)
@@ -917,6 +989,7 @@ namespace Guardian.Game
             if (uiScale != null)
                 uiScale.RegisterValueChangedCallback(e =>
                 {
+                    SetPct(root, "UIScaleValue", e.newValue);
                     SettingsService.SetUIScale(e.newValue / 100f);
                     ApplyUiScaleToRoot(root);
                     SettingsService.Save();
