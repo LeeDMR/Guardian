@@ -15,6 +15,7 @@ namespace Guardian.Game
         [SerializeField] private UIDocument doc;
         [SerializeField] private BoardManager board;
         [SerializeField] private VisualTreeAsset cardTileAsset;
+        [SerializeField] private VisualTreeAsset guardianHudAsset;
 
         [Header("Cards Grid Auto-Fit (UI Toolkit)")]
         [Tooltip("Сколько рядов предпочитаем на доске. Например: 2 для 6 карт (получится 3x2).")]
@@ -72,8 +73,8 @@ namespace Guardian.Game
         private Button levelsBackButton;
         private Button settingsBackButton;
         private VisualElement levelsList;
-        private Slider musicSlider;
-        private Slider sfxSlider;
+        private SliderInt musicSlider;
+        private SliderInt sfxSlider;
 
         private bool initialized;
 
@@ -94,7 +95,7 @@ namespace Guardian.Game
         private IEnumerator InitWhenReady()
         {
             // Wait a few frames for UITK to finish cloning the tree (especially in Editor).
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 60; i++)
             {
                 if (TryInitUI())
                     yield break;
@@ -116,10 +117,16 @@ namespace Guardian.Game
             // UIDocument normally clones the VisualTreeAsset into rootVisualElement in OnEnable().
             // However, in some Editor/domain-reload setups the tree may still be empty here.
             // If it's empty but we have a VisualTreeAsset assigned, clone it ourselves.
-            if (root.childCount == 0 && doc.visualTreeAsset != null)
+            if (root.childCount == 0)
             {
-                doc.visualTreeAsset.CloneTree(root);
+                var vta = doc.visualTreeAsset != null ? doc.visualTreeAsset : guardianHudAsset;
+                if (vta != null)
+                    vta.CloneTree(root);
             }
+
+            // всё ещё пусто? значит не назначен ни Source Asset, ни guardianHudAsset
+            if (root.childCount == 0)
+                return false;
 
             if (root.childCount == 0) return false;
             // Main menu elements
@@ -138,8 +145,8 @@ namespace Guardian.Game
             levelsBackButton = root.Q<Button>("LevelsBackButton");
             settingsBackButton = root.Q<Button>("SettingsBackButton");
             levelsList = root.Q<VisualElement>("LevelsList");
-            musicSlider = root.Q<Slider>("MusicSlider");
-            sfxSlider = root.Q<Slider>("SfxSlider");
+            musicSlider = root.Q<SliderInt>("MusicSlider");
+            sfxSlider = root.Q<SliderInt>("SfxSlider");
 
             cardsGrid = root.Q<VisualElement>("CardsGrid");
             boardArea = root.Q<VisualElement>("BoardArea");
@@ -210,9 +217,9 @@ namespace Guardian.Game
 
             // Load saved settings
             if (musicSlider != null)
-                musicSlider.value = PlayerPrefs.GetFloat("Settings.Music", (float)musicSlider.value);
+                musicSlider.value = (int)PlayerPrefs.GetFloat("Settings.Music", (float)musicSlider.value);
             if (sfxSlider != null)
-                sfxSlider.value = PlayerPrefs.GetFloat("Settings.SFX", (float)sfxSlider.value);
+                sfxSlider.value = (int)PlayerPrefs.GetFloat("Settings.SFX", (float)sfxSlider.value);
 
             if (musicSlider != null)
                 musicSlider.RegisterValueChangedCallback(evt =>

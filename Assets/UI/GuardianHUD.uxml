@@ -106,4 +106,5 @@
             </ui:VisualElement>
           </ui:VisualElement>
         </ui:VisualElement>
+    </ui:VisualElement>
 </ui:UXML>

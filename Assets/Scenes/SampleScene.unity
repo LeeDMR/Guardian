@@ -1718,7 +1718,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1310567534
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2591,6 +2591,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Guardian.Game.BoardUIToolkitBridge
   doc: {fileID: 2099115743}
   board: {fileID: 656557450}
+  cardTileAsset: {fileID: 9197481963319205126, guid: ff40616a311ec834a8d5a78f676aa073, type: 3}
+  guardianHudAsset: {fileID: 9197481963319205126, guid: bd7c0818d4341c14cbba521c0d906024, type: 3}
+  preferredRows: 2
+  preferredColumns: 0
+  gridPadding: 28
+  gridGap: 30
+  referenceCardSize: {x: 240, y: 340}
+  allowUpscale: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
