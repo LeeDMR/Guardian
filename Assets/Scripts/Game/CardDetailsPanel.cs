@@ -55,7 +55,7 @@ namespace Guardian.Game
             if (useAbilityButton) useAbilityButton.interactable = canUse;
 
             if (useAbilityButtonLabel)
-                useAbilityButtonLabel.text = canUse ? def.abilityButtonText : "Способность использована";
+                useAbilityButtonLabel.text = canUse ? def.abilityButtonText : "способность использована";
         }
 
         // Можно вешать на кнопку в инспекторе, но мы также привязываем в Init() автоматически.

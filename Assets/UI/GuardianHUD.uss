@@ -376,3 +376,34 @@
     width: 220px;
 }
 
+.section {
+  margin-top: 14px;
+  margin-bottom: 6px;
+  unity-font-style: bold;
+  font-size: 14px;
+  color: rgba(255,255,255,0.85);
+}
+
+.row {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+  margin-bottom: 6px;
+}
+
+.row-label {
+  width: 140px;
+  color: rgba(255,255,255,0.75);
+  font-size: 13px;
+}
+
+.row-control {
+  flex-grow: 1;
+}
+
+.buttons {
+  flex-direction: row;
+  justify-content: space-between;
+  margin-top: 16px;
+}

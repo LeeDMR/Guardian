@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Guardian.Data;
+using Guardian.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
@@ -87,6 +88,7 @@ namespace Guardian.Game
         {
             // Avoid NullReference in Awake: visual tree may not be cloned yet.
             StartCoroutine(InitWhenReady());
+            SettingsService.ApplyAll();
         }
 
         private IEnumerator InitWhenReady()
@@ -109,8 +111,17 @@ namespace Guardian.Game
             if (!doc) return false;
 
             root = doc.rootVisualElement;
-            if (root == null || root.childCount == 0) return false;
+            if (root == null) return false;
 
+            // UIDocument normally clones the VisualTreeAsset into rootVisualElement in OnEnable().
+            // However, in some Editor/domain-reload setups the tree may still be empty here.
+            // If it's empty but we have a VisualTreeAsset assigned, clone it ourselves.
+            if (root.childCount == 0 && doc.visualTreeAsset != null)
+            {
+                doc.visualTreeAsset.CloneTree(root);
+            }
+
+            if (root.childCount == 0) return false;
             // Main menu elements
             gameHud = root.Q<VisualElement>("GameHUD");
             menuOverlay = root.Q<VisualElement>("MenuOverlay");
@@ -739,6 +750,134 @@ namespace Guardian.Game
             Vector2 b2 = RuntimePanelUtils.ScreenToPanel(panel, c2);
             return (b1 - panelPos).sqrMagnitude <= (b2 - panelPos).sqrMagnitude ? c1 : c2;
         }
+
+        private void PopulateSettingsUI(VisualElement root)
+        {
+            // sliders
+            var master = root.Q<SliderInt>("MasterSlider");
+            var music = root.Q<SliderInt>("MusicSlider");
+            var sfx = root.Q<SliderInt>("SfxSlider");
+            var uiScale = root.Q<SliderInt>("UIScaleSlider");
+
+            // toggles
+            var fullscreen = root.Q<Toggle>("FullscreenToggle");
+            var vsync = root.Q<Toggle>("VSyncToggle");
+
+            // dropdowns
+            var quality = root.Q<DropdownField>("QualityDropdown");
+            var resolution = root.Q<DropdownField>("ResolutionDropdown");
+            var fps = root.Q<DropdownField>("FpsDropdown");
+
+            // set values
+            if (master != null) master.value = Mathf.RoundToInt(SettingsService.Master * 100f);
+            if (music != null) music.value = Mathf.RoundToInt(SettingsService.Music * 100f);
+            if (sfx != null) sfx.value = Mathf.RoundToInt(SettingsService.Sfx * 100f);
+            if (uiScale != null) uiScale.value = Mathf.RoundToInt(SettingsService.UIScale * 100f);
+
+            if (fullscreen != null) fullscreen.value = SettingsService.Fullscreen;
+            if (vsync != null) vsync.value = SettingsService.VSync;
+
+            if (quality != null)
+            {
+                quality.choices = new System.Collections.Generic.List<string>(QualitySettings.names);
+                quality.index = Mathf.Clamp(SettingsService.QualityIndex, 0, quality.choices.Count - 1);
+            }
+
+            if (fps != null)
+            {
+                fps.choices = new System.Collections.Generic.List<string> { "Unlimited", "30", "60", "120" };
+                fps.index = SettingsService.FpsCap switch { 0 => 0, 30 => 1, 60 => 2, 120 => 3, _ => 2 };
+            }
+
+            if (resolution != null)
+            {
+                var res = Screen.resolutions;
+                var list = new System.Collections.Generic.List<string>();
+                for (int i = 0; i < res.Length; i++)
+                    list.Add($"{res[i].width}x{res[i].height} @{(int)res[i].refreshRateRatio.value}Hz");
+
+                resolution.choices = list;
+
+                int idx = SettingsService.ResolutionIndex;
+                if (idx < 0)
+                {
+                    // найти текущую
+                    idx = 0;
+                    for (int i = 0; i < res.Length; i++)
+                        if (res[i].width == Screen.width && res[i].height == Screen.height)
+                        { idx = i; break; }
+                }
+                resolution.index = Mathf.Clamp(idx, 0, Mathf.Max(0, list.Count - 1));
+            }
+        }
+
+        private void WireSettingsCallbacks(VisualElement root)
+        {
+            var master = root.Q<SliderInt>("MasterSlider");
+            if (master != null)
+                master.RegisterValueChangedCallback(e => { SettingsService.SetMaster(e.newValue / 100f); SettingsService.ApplyAudio(); SettingsService.Save(); });
+
+            var music = root.Q<SliderInt>("MusicSlider");
+            if (music != null)
+                music.RegisterValueChangedCallback(e => { SettingsService.SetMusic(e.newValue / 100f); SettingsService.Save(); });
+
+            var sfx = root.Q<SliderInt>("SfxSlider");
+            if (sfx != null)
+                sfx.RegisterValueChangedCallback(e => { SettingsService.SetSfx(e.newValue / 100f); SettingsService.Save(); });
+
+            var fullscreen = root.Q<Toggle>("FullscreenToggle");
+            if (fullscreen != null)
+                fullscreen.RegisterValueChangedCallback(e => { SettingsService.SetFullscreen(e.newValue); SettingsService.ApplyGraphics(); SettingsService.Save(); });
+
+            var vsync = root.Q<Toggle>("VSyncToggle");
+            if (vsync != null)
+                vsync.RegisterValueChangedCallback(e => { SettingsService.SetVSync(e.newValue); SettingsService.ApplyGraphics(); SettingsService.Save(); });
+
+            var quality = root.Q<DropdownField>("QualityDropdown");
+            if (quality != null)
+                quality.RegisterValueChangedCallback(_ => { SettingsService.SetQualityIndex(quality.index); SettingsService.ApplyGraphics(); SettingsService.Save(); });
+
+            var resolution = root.Q<DropdownField>("ResolutionDropdown");
+            if (resolution != null)
+                resolution.RegisterValueChangedCallback(_ => { SettingsService.SetResolutionIndex(resolution.index); SettingsService.ApplyGraphics(); SettingsService.Save(); });
+
+            var fps = root.Q<DropdownField>("FpsDropdown");
+            if (fps != null)
+                fps.RegisterValueChangedCallback(_ =>
+                {
+                    int cap = fps.index switch { 0 => 0, 1 => 30, 2 => 60, 3 => 120, _ => 60 };
+                    SettingsService.SetFpsCap(cap);
+                    SettingsService.ApplyGraphics();
+                    SettingsService.Save();
+                });
+
+            var uiScale = root.Q<SliderInt>("UIScaleSlider");
+            if (uiScale != null)
+                uiScale.RegisterValueChangedCallback(e =>
+                {
+                    SettingsService.SetUIScale(e.newValue / 100f);
+                    ApplyUiScaleToRoot(root);
+                    SettingsService.Save();
+                });
+
+            var reset = root.Q<Button>("SettingsResetButton");
+            if (reset != null)
+                reset.clicked += () =>
+                {
+                    SettingsService.ResetToDefaults();
+                    SettingsService.ApplyAll();
+                    PopulateSettingsUI(root);
+                    ApplyUiScaleToRoot(root);
+                };
+        }
+
+        private void ApplyUiScaleToRoot(VisualElement root)
+        {
+            // Важно: scale применяется к rootVisualElement (или к отдельному контейнеру UI)
+            float s = Guardian.UI.SettingsService.UIScale;
+            root.style.scale = new Scale(new Vector3(s, s, 1f));
+        }
+
 
     }
 }

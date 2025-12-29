@@ -1,4 +1,4 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+ï»¿<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
     <Style src="project://database/Assets/UI/GuardianHUD.uss?fileID=7433441132597879392&amp;guid=f621e216416ce7b478eae572f2bd632d&amp;type=3#GuardianHUD" />
     <Style src="project://database/Assets/UI/CardTile.uss?fileID=7433441132597879392&amp;guid=f7ed7d2cfd121b148846e11536efc8db&amp;type=3#CardTile" />
 
@@ -37,9 +37,9 @@
             <ui:VisualElement class="menu-panel">
                 <ui:Label text="GUARDIAN" class="menu-title" />
                 <ui:Label text="" class="menu-subtitle" />
-                <ui:Button name="PlayButton" text="Èãðàòü" class="btn primary menu-btn" />
-                <ui:Button name="SettingsButton" text="Íàñòðîéêè" class="btn menu-btn" />
-                <ui:Button name="ExitButton" text="Âûõîä" class="btn danger menu-btn" />
+                <ui:Button name="PlayButton" text="Ð˜Ð³Ñ€Ð°Ñ‚ÑŒ" class="btn primary menu-btn" />
+                <ui:Button name="SettingsButton" text="ÐÐ°ÑÑ‚Ñ€Ð¾Ð¹ÐºÐ¸" class="btn menu-btn" />
+                <ui:Button name="ExitButton" text="Ð’Ñ‹Ñ…Ð¾Ð´" class="btn danger menu-btn" />
             </ui:VisualElement>
         </ui:VisualElement>
 
@@ -47,27 +47,63 @@
         <ui:VisualElement name="LevelSelectOverlay" class="overlay modal-overlay hidden">
             <ui:VisualElement class="overlay-scrim" />
             <ui:VisualElement class="modal-panel">
-                <ui:Label text="Âûáîð óðîâíÿ" class="modal-title" />
+                <ui:Label text="Ð’Ñ‹Ð±Ð¾Ñ€ ÑƒÑ€Ð¾Ð²Ð½Ñ" class="modal-title" />
                 <ui:VisualElement name="LevelsList" class="levels-list" />
-                <ui:Button name="LevelsBackButton" text="Íàçàä" class="btn menu-btn" />
+                <ui:Button name="LevelsBackButton" text="ÐÐ°Ð·Ð°Ð´" class="btn menu-btn" />
             </ui:VisualElement>
         </ui:VisualElement>
 
         <!-- Settings Modal -->
-        <ui:VisualElement name="SettingsOverlay" class="overlay modal-overlay hidden">
-            <ui:VisualElement class="overlay-scrim" />
-            <ui:VisualElement class="modal-panel">
-                <ui:Label text="Íàñòðîéêè" class="modal-title" />
-                <ui:VisualElement class="settings-row">
-                    <ui:Label text="Ìóçûêà" class="settings-label" />
-                    <ui:Slider name="MusicSlider" low-value="0" high-value="1" value="0.8" class="settings-slider" />
-                </ui:VisualElement>
-                <ui:VisualElement class="settings-row">
-                    <ui:Label text="SFX" class="settings-label" />
-                    <ui:Slider name="SfxSlider" low-value="0" high-value="1" value="0.8" class="settings-slider" />
-                </ui:VisualElement>
-                <ui:Button name="SettingsBackButton" text="Çàêðûòü" class="btn menu-btn" />
+        <ui:VisualElement name="SettingsOverlay" class="overlay hidden">
+          <ui:VisualElement class="panel">
+            <ui:Label text="ÐÐ°ÑÑ‚Ñ€Ð¾Ð¹ÐºÐ¸" class="title"/>
+
+            <ui:Label text="ÐÑƒÐ´Ð¸Ð¾" class="section"/>
+            <ui:VisualElement class="row">
+              <ui:Label text="Master" class="row-label"/>
+              <ui:SliderInt name="MasterSlider" low-value="0" high-value="100" class="row-control"/>
             </ui:VisualElement>
+            <ui:VisualElement class="row">
+              <ui:Label text="Music" class="row-label"/>
+              <ui:SliderInt name="MusicSlider" low-value="0" high-value="100" class="row-control"/>
+            </ui:VisualElement>
+            <ui:VisualElement class="row">
+              <ui:Label text="SFX" class="row-label"/>
+              <ui:SliderInt name="SfxSlider" low-value="0" high-value="100" class="row-control"/>
+            </ui:VisualElement>
+
+            <ui:Label text="Ð“Ñ€Ð°Ñ„Ð¸ÐºÐ°" class="section"/>
+            <ui:VisualElement class="row">
+              <ui:Label text="Fullscreen" class="row-label"/>
+              <ui:Toggle name="FullscreenToggle" class="row-control"/>
+            </ui:VisualElement>
+            <ui:VisualElement class="row">
+              <ui:Label text="Resolution" class="row-label"/>
+              <ui:DropdownField name="ResolutionDropdown" class="row-control"/>
+            </ui:VisualElement>
+            <ui:VisualElement class="row">
+              <ui:Label text="Quality" class="row-label"/>
+              <ui:DropdownField name="QualityDropdown" class="row-control"/>
+            </ui:VisualElement>
+            <ui:VisualElement class="row">
+              <ui:Label text="VSync" class="row-label"/>
+              <ui:Toggle name="VSyncToggle" class="row-control"/>
+            </ui:VisualElement>
+            <ui:VisualElement class="row">
+              <ui:Label text="FPS" class="row-label"/>
+              <ui:DropdownField name="FpsDropdown" class="row-control"/>
+            </ui:VisualElement>
+
+            <ui:Label text="Ð˜Ð½Ñ‚ÐµÑ€Ñ„ÐµÐ¹Ñ" class="section"/>
+            <ui:VisualElement class="row">
+              <ui:Label text="UI Scale" class="row-label"/>
+              <ui:SliderInt name="UIScaleSlider" low-value="80" high-value="130" class="row-control"/>
+            </ui:VisualElement>
+
+            <ui:VisualElement class="buttons">
+              <ui:Button name="SettingsBackButton" text="ÐÐ°Ð·Ð°Ð´"/>
+              <ui:Button name="SettingsResetButton" text="Ð¡Ð±Ñ€Ð¾ÑÐ¸Ñ‚ÑŒ"/>
+            </ui:VisualElement>
+          </ui:VisualElement>
         </ui:VisualElement>
-    </ui:VisualElement>
 </ui:UXML>
